@@ -18,6 +18,7 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     salleId: 'ambroise',
     genres: ['comedie', 'classique'],
     durees: [{ minutes: 110, source: 'Théâtre' }],
+    fares: { full: 32, reduced: 18 },
     seances: [
       { jour: '2026-11-26', debutMinutes: 1200 },
       { jour: '2026-11-27', debutMinutes: 1200 },
@@ -40,6 +41,7 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     salleId: 'faubourg',
     genres: ['comedie', 'contemporain'],
     durees: [],
+    fares: { full: 26, reduced: 15 },
     seances: [
       { jour: '2026-11-26', debutMinutes: 1140 },
       { jour: '2026-11-27', debutMinutes: 1140 },
@@ -64,6 +66,7 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
       { minutes: 105, source: 'Site du théâtre' },
       { minutes: 115, source: 'Billetterie partenaire' },
     ],
+    fares: { full: 29, reduced: 16 },
     seances: [
       { jour: '2026-11-27', debutMinutes: 1200 },
       { jour: '2026-11-28', debutMinutes: 990 },
@@ -94,6 +97,7 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     salleId: 'boulevards',
     genres: ['comedie', 'classique'],
     durees: [{ minutes: 90, source: 'Théâtre' }],
+    fares: { full: 35, reduced: 20 },
     seances: [
       { jour: '2026-11-26', debutMinutes: 1200 },
       { jour: '2026-11-27', debutMinutes: 1230 },
@@ -116,6 +120,7 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     salleId: 'canal',
     genres: ['classique', 'comedie'],
     durees: [{ minutes: 165, source: 'Théâtre' }],
+    fares: { full: 38, reduced: 22 },
     seances: [
       { jour: '2026-11-26', debutMinutes: 1170 },
       { jour: '2026-11-28', debutMinutes: 1200 },
@@ -137,6 +142,7 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     salleId: 'recollets',
     genres: ['comedie', 'contemporain'],
     durees: [{ minutes: 80, source: 'Théâtre' }],
+    fares: { full: 24, reduced: 14 },
     seances: [
       { jour: '2026-11-26', debutMinutes: 1215 },
       { jour: '2026-11-27', debutMinutes: 1215 },
@@ -158,6 +164,7 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     salleId: 'recollets',
     genres: ['drame', 'contemporain'],
     durees: [{ minutes: 90, source: 'Théâtre' }],
+    fares: { full: 24, reduced: 14 },
     seances: [
       { jour: '2026-11-26', debutMinutes: 1155 },
       { jour: '2026-11-28', debutMinutes: 1095 },

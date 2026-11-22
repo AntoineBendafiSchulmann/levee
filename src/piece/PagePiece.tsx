@@ -9,14 +9,17 @@ import { resultatDeSeance } from '../domaine/resultats';
 import { identifiantSeance, resoudrePagePiece } from '../domaine/seance';
 import { formaterDuree, formaterHeure, libelleJourBref, libelleJourLong } from '../domaine/temps';
 import type { CriteresSortie, JourIso, Salle, Spectacle } from '../domaine/types';
+import { bookActionLabel } from '../bookings/bookingRules';
+import type { Bookings } from '../bookings/useBookings';
 import type { Parcours } from '../parcours/useParcours';
 import { verdictSeance } from '../domaine/explication';
-import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../composants/presentationStatut';
+import { BORDURE_GROUPE, LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../composants/presentationStatut';
 import { CalculHoraire } from './CalculHoraire';
 import { ChoixSeance } from './ChoixSeance';
 
 interface Props {
   readonly parcours: Parcours;
+  readonly bookings: Bookings;
   readonly aujourdhui: JourIso;
   readonly spectacles: readonly Spectacle[];
   readonly salles: readonly Salle[];
@@ -39,16 +42,15 @@ function phraseDurees(spectacle: Spectacle): string {
 /**
  * Page d'une pièce (« fiche » dans l'interface), avec sa séance choisie. Adresses : `/piece/:id` (séance présélectionnée d'après les
  * critères) et `/seances/:id` (séance précise). Choisir un autre horaire met l'adresse à jour, pour qu'un
- * rechargement affiche la même séance. La réservation arrive dans un lot suivant : aucun bouton ne
- * la promet ici.
+ * rechargement affiche la même séance. Le bouton du bas réserve cette séance exacte (simulation).
  */
-export function PagePiece({ parcours, aujourdhui, spectacles, salles, options }: Props) {
+export function PagePiece({ parcours, bookings, aujourdhui, spectacles, salles, options }: Props) {
   const { criteres, cible } = parcours;
   const pagePiece = cible === null ? undefined : resoudrePagePiece(spectacles, salles, cible, criteres);
 
   return (
     <div className="flex h-dvh flex-col">
-      <Navbar ecran="piece" date={libelleJourLong(criteres.jour)} onAccueil={parcours.retournerAccueil} onSeances={parcours.allerSeancesDuSoir} />
+      <Navbar ecran="piece" date={libelleJourLong(criteres.jour)} onAccueil={parcours.retournerAccueil} onSeances={parcours.allerSeancesDuSoir} bookingCount={bookings.count} onOpenTickets={bookings.openTickets} />
       {pagePiece === undefined ? (
         <PieceIntrouvable parcours={parcours} />
       ) : (
@@ -56,6 +58,7 @@ export function PagePiece({ parcours, aujourdhui, spectacles, salles, options }:
         <PieceOuverte
           key={pagePiece.spectacle.id}
           parcours={parcours}
+          bookings={bookings}
           criteres={criteres}
           aujourdhui={aujourdhui}
           options={options}
@@ -95,13 +98,14 @@ function PieceIntrouvable({ parcours }: { readonly parcours: Parcours }) {
 
 interface OuverteProps {
   readonly parcours: Parcours;
+  readonly bookings: Bookings;
   readonly criteres: CriteresSortie;
   readonly aujourdhui: JourIso;
   readonly options: OptionsCriteres;
   readonly pagePiece: NonNullable<ReturnType<typeof resoudrePagePiece>>;
 }
 
-function PieceOuverte({ parcours, criteres, aujourdhui, options, pagePiece }: OuverteProps) {
+function PieceOuverte({ parcours, bookings, criteres, aujourdhui, options, pagePiece }: OuverteProps) {
   const { spectacle, salle, seance } = pagePiece;
   const titre = useRef<HTMLHeadingElement>(null);
   const focaliser = parcours.naviguee;
@@ -187,7 +191,7 @@ function PieceOuverte({ parcours, criteres, aujourdhui, options, pagePiece }: Ou
               />
               <p
                 aria-live="polite"
-                className={`rounded-md border px-4 py-3.5 text-[15px] leading-snug text-pretty ${TEXTE_GROUPE[groupe]} ${BORD[groupe]}`}
+                className={`rounded-md border px-4 py-3.5 text-[15px] leading-snug text-pretty ${TEXTE_GROUPE[groupe]} ${BORDURE_GROUPE[groupe]}`}
               >
                 {verdictSeance(resultat, criteres, origine)}
               </p>
@@ -206,11 +210,20 @@ function PieceOuverte({ parcours, criteres, aujourdhui, options, pagePiece }: Ou
             </span>
             <span className={TEXTE_GROUPE[groupe]}>{LIBELLE_STATUT[statut]}</span>
           </p>
-          <p className="text-sm text-texte-doux">Réservation bientôt disponible</p>
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => {
+              bookings.openBookingForm(identifiantSeance(spectacle, seance));
+            }}
+            className={`min-h-[54px] max-w-[420px] flex-[1_1_240px] rounded-full px-[22px] text-base font-extrabold ${
+              groupe === 'possible' ? 'bg-corail text-fond hover:bg-corail-vif' : 'border border-texte hover:bg-surface-survol'
+            }`}
+          >
+            {bookActionLabel(groupe)}
+          </button>
         </div>
       </div>
     </>
   );
 }
-
-const BORD = { possible: 'border-ok', 'a-verifier': 'border-attention', impossible: 'border-danger' } as const;

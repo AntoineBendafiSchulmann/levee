@@ -24,3 +24,10 @@ export const POINT_GROUPE: Readonly<Record<GroupeSeance, string>> = {
   'a-verifier': 'bg-attention',
   impossible: 'bg-danger',
 };
+
+/** Couleur de la bordure d'un message (verdict) selon le groupe. */
+export const BORDURE_GROUPE: Readonly<Record<GroupeSeance, string>> = {
+  possible: 'border-ok',
+  'a-verifier': 'border-attention',
+  impossible: 'border-danger',
+};

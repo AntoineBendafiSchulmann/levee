@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 import type { Ecran } from '../parcours/chemins';
 import { Navbar } from './Navbar';
 
-const rendu = (ecran: Ecran) =>
-  renderToStaticMarkup(<Navbar ecran={ecran} date="Jeudi 26 novembre" onAccueil={() => undefined} onSeances={() => undefined} />);
+const rendu = (ecran: Ecran, nombre = 0) =>
+  renderToStaticMarkup(<Navbar ecran={ecran} date="Jeudi 26 novembre" onAccueil={() => undefined} onSeances={() => undefined} bookingCount={nombre} onOpenTickets={() => undefined} />);
 
 describe('en-tête et navigation', () => {
   it('propose le logo, « À l’affiche » et « Séances de la soirée » (« Séances » sur mobile)', () => {
@@ -36,5 +36,13 @@ describe('en-tête et navigation', () => {
     const html = rendu('piece');
     expect(html.match(/href="\/"/g)).toHaveLength(2);
     expect(html).toContain('href="/#seances-du-soir"');
+  });
+
+  it('« Billets · N » sur tous les écrans, avec le nombre de réservations', () => {
+    for (const ecran of ['accueil', 'resultats', 'piece'] as const) {
+      expect(rendu(ecran, 0)).toContain('Billets · 0');
+      expect(rendu(ecran, 2)).toContain('Billets · 2');
+    }
+    expect(rendu('accueil', 1)).toMatch(/<button type="button" aria-haspopup="dialog"[^>]*>Billets/);
   });
 });

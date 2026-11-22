@@ -45,6 +45,26 @@ describe('mémoire des critères de l’onglet', () => {
     expect(lireCriteres(stockage, CONTRAINTES)).toEqual(SAISIS);
   });
 
+  it('contrat persisté : relit et réécrit à l’identique le contenu relevé dans un onglet', () => {
+    const releve =
+      '{"jour":"2026-11-28","origine":"bastille","departMinutes":1110,"limiteMinutes":1320,"genres":["classique"],"auteur":"","masquerImpossibles":false}';
+    const stockage = stockageDe({ [CLE_CRITERES]: releve });
+    const criteres = lireCriteres(stockage, CONTRAINTES);
+    expect(criteres).toEqual({
+      jour: '2026-11-28',
+      origine: 'bastille',
+      departMinutes: 1110,
+      limiteMinutes: 1320,
+      genres: ['classique'],
+      auteur: '',
+      masquerImpossibles: false,
+    });
+    if (criteres !== undefined) {
+      ecrireCriteres(stockage, criteres);
+    }
+    expect(stockage.contenu[CLE_CRITERES]).toBe(releve);
+  });
+
   it('ne met rien dans l’adresse : seule la clé du stockage est utilisée', () => {
     const stockage = stockageDe();
     ecrireCriteres(stockage, SAISIS);

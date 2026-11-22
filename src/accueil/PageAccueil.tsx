@@ -7,6 +7,7 @@ import { libelleBoutonVoir, libelleCompteurs, type Resultats } from '../domaine/
 import { formaterHeure, libelleJourCourt, libelleJourDu, libelleJourLong } from '../domaine/temps';
 import type { JourIso, Salle, Spectacle } from '../domaine/types';
 import { focaliserCle, ramenerEnVue } from '../parcours/focus';
+import type { Bookings } from '../bookings/useBookings';
 import type { Parcours } from '../parcours/useParcours';
 import { ActionsAccueil } from './ActionsAccueil';
 import { CarrouselAffiches } from './CarrouselAffiches';
@@ -17,6 +18,7 @@ import { useReducedMotion } from './useReducedMotion';
 
 interface Props {
   readonly parcours: Parcours;
+  readonly bookings: Bookings;
   /** Jour courant : « ce soir » désigne ce jour-là. */
   readonly aujourdhui: JourIso;
   readonly spectacles: readonly Spectacle[];
@@ -31,7 +33,7 @@ interface Props {
  * « Préparer une autre sortie » et les pastilles ouvrent la feuille de critères ; activer l'affiche ou une
  * séance ouvre la fiche. La page défile dans son conteneur : sa position est mémorisée pour le retour.
  */
-export function PageAccueil({ parcours, aujourdhui, spectacles, salles, options, resultats }: Props) {
+export function PageAccueil({ parcours, bookings, aujourdhui, spectacles, salles, options, resultats }: Props) {
   const { criteres, cleRetour, lirePosition, memoriserPosition, lirePieceActive, memoriserPieceActive, consommerAncre } = parcours;
   const reduire = useReducedMotion();
   const defileur = useRef<HTMLElement>(null);
@@ -92,7 +94,7 @@ export function PageAccueil({ parcours, aujourdhui, spectacles, salles, options,
 
   return (
     <div className="flex h-dvh flex-col">
-      <Navbar ecran="accueil" date={libelleJourLong(criteres.jour)} onAccueil={remonter} onSeances={versSeancesDuSoir} />
+      <Navbar ecran="accueil" date={libelleJourLong(criteres.jour)} onAccueil={remonter} onSeances={versSeancesDuSoir} bookingCount={bookings.count} onOpenTickets={bookings.openTickets} />
 
       <main
         ref={defileur}

@@ -10,12 +10,14 @@ import { libelleBoutonVoir, libelleCompteurs, type Resultats } from '../domaine/
 import { formaterHeure, libelleJourCourt, libelleJourLong } from '../domaine/temps';
 import { pluriel } from '../domaine/texte';
 import { focaliserCle, ramenerEnVue } from '../parcours/focus';
+import type { Bookings } from '../bookings/useBookings';
 import type { Parcours } from '../parcours/useParcours';
 import { CarteSeance } from '../composants/CarteSeance';
 import { MOTIF_INCERTAIN, MOTIF_TRAJET } from '../composants/FriseHoraire';
 
 interface Props {
   readonly parcours: Parcours;
+  readonly bookings: Bookings;
   readonly aujourdhui: string;
   readonly options: OptionsCriteres;
   readonly resultats: Resultats;
@@ -27,7 +29,7 @@ const PASTILLE = 'min-h-11 flex-none rounded-full border border-filet bg-surface
  * Séances qui rentrent dans la soirée, une carte par séance. Les critères se règlent en direct :
  * barre collante et feuille sur mobile et tablette, colonne fixe à gauche sur grand écran.
  */
-export function PageResultats({ parcours, aujourdhui, options, resultats }: Props) {
+export function PageResultats({ parcours, bookings, aujourdhui, options, resultats }: Props) {
   const { criteres, lirePosition, memoriserPosition } = parcours;
   const defileur = useRef<HTMLElement>(null);
   const titre = useRef<HTMLHeadingElement>(null);
@@ -75,7 +77,7 @@ export function PageResultats({ parcours, aujourdhui, options, resultats }: Prop
 
   return (
     <div className="flex h-dvh flex-col">
-      <Navbar ecran="resultats" date={libelleJourLong(criteres.jour)} onAccueil={parcours.retournerAccueil} onSeances={parcours.allerSeancesDuSoir} />
+      <Navbar ecran="resultats" date={libelleJourLong(criteres.jour)} onAccueil={parcours.retournerAccueil} onSeances={parcours.allerSeancesDuSoir} bookingCount={bookings.count} onOpenTickets={bookings.openTickets} />
 
       <div className="flex min-h-0 flex-1 bureau:grid bureau:grid-cols-[372px_minmax(0,1fr)]">
         <aside

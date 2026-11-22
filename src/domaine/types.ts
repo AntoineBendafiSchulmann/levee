@@ -87,6 +87,12 @@ export interface AfficheDef {
   };
 }
 
+/** Les deux tarifs proposés pour toutes les pièces : plein tarif (`full`) et « moins de 26 ans » (`reduced`). */
+export type FareId = 'full' | 'reduced';
+
+/** Prix d'une place en euros entiers, pour chaque tarif. */
+export type Fares = Readonly<Record<FareId, number>>;
+
 export interface Spectacle {
   readonly id: string;
   readonly titre: string;
@@ -97,6 +103,8 @@ export interface Spectacle {
   readonly salleId: string;
   /** Aucune durée annoncée : tableau vide. */
   readonly durees: readonly Duree[];
+  /** Prix d'une place, propre à la pièce. */
+  readonly fares: Fares;
   readonly seances: readonly Seance[];
   readonly affiche: AfficheDef;
 }

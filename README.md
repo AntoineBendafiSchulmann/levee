@@ -1,7 +1,7 @@
 # levee
 
 Une API ASP.NET Core et un client React + Vite en TypeScript strict, stylé avec Tailwind CSS.
-Le client propose le parcours accueil → critères → résultats → fiche d'une pièce avec des données de démonstration (lots 1 à 4).
+Le client propose le parcours accueil → critères → résultats → fiche d'une pièce → réservation simulée → « Mes billets » avec des données de démonstration.
 En développement, le navigateur ne parle qu'à Vite, qui relaie `/bff` vers ASP.NET Core.
 
 ```
@@ -11,12 +11,20 @@ Navigateur ──► http://localhost:5173  (Vite)
 
 ## Structure
 
+Code en anglais, interface en français : les conventions de nommage et le vocabulaire sont dans `CLAUDE.md`. Les dossiers
+antérieurs au lot Billets portent encore des noms français, en attente d'un lot de migration dédié.
+
 ```
 server/Levee.Api/               API ASP.NET Core (BFF) appelée par le client
 src/                            Client React + Vite (index.html, package.json et configurations à la racine)
   composants/                   Composants partagés entre plusieurs fonctionnalités : navigation principale (Navbar),
                                 affiche (Affiche), carte de séance (CarteSeance) et sa frise (FriseHoraire), libellés
                                 et couleurs de statut (presentationStatut.ts), gestion du clic simple sur un lien (clicSimple.ts)
+    ui/                         Primitives sans logique métier : feuille modale (Sheet : dialogue, fermeture, focus, feuille
+                                mobile ou panneau latéral), commune à la feuille de critères et aux réservations
+  bookings/                     Réservation simulée : état et stockage des réservations (useBookings, bookingSessionStorage),
+                                règles (bookingRules.ts : tarifs, 1 à 6 places, référence), feuille « Réservation », « C'est noté »
+                                et « Mes billets » (BookingSheet, BookingForm, BookingReceipt, bookingSummary)
   accueil/                      Page d'accueil et ses composants propres : pièce à l'affiche et ses voisines
                                 (CarrouselAffiches, useCarrousel, useReducedMotion, useDesktopBreakpoint), séances sous
                                 l'affiche, séances du soir (SeancesDuSoir pour l'affichage, selectionnerSeancesDuSoir pour le choix)
@@ -162,8 +170,24 @@ Dans le navigateur :
     refusée par le domaine (origine inconnue, heure hors bornes ou hors pas de 5 minutes, genre ou jour inconnu)
     est ignorée ; un stockage inaccessible aussi.
 
+13. Billets et réservation simulée. L'en-tête porte « Billets · N » sur l'accueil, les résultats et la fiche, sur
+    mobile comme sur ordinateur ; N est le nombre de réservations (pas de places). À zéro, le bouton ouvre « Mes
+    billets » et son état vide « Aucune réservation simulée pour l’instant. ». Sur la fiche, « Réserver cette séance »
+    (séance « À temps ») ou « Réserver malgré tout » (à vérifier ou impossible) ouvre « Réservation » pour la séance
+    exactement sélectionnée : choisir 20 h alors que la pièce joue aussi à 16 h 30 donne un billet de 20 h. À chaque
+    ouverture, le formulaire repart du plein tarif et de deux places ; tarifs propres à la pièce (par exemple *Le Jeu de
+    l'amour et du hasard* : 29 € plein tarif, 16 € moins de 26 ans), de 1 à 6 places, total en direct. Fermer ou
+    « Changer de séance » ne crée rien. « Confirmer la simulation » crée une seule réservation et affiche « C'est noté »
+    (reçu) ; « Retour à l'accueil » ou « Retour aux résultats » suit la provenance de la fiche. Aucun paiement, aucun
+    billet réel : la mention est affichée partout. Les réservations sont gardées dans le `sessionStorage` de l'onglet
+    (clé `levee:reservations`), la plus récente en premier ; actualiser les conserve, un onglet neuf commence vide, un
+    stockage inaccessible laisse le parcours fonctionner en mémoire, et un contenu illisible ou refusé par la
+    programmation (séance inconnue, tarif inconnu, places hors de 1 à 6, référence répétée) est ignoré en entier.
+    Parcours de référence : samedi 28 novembre, *Le Jeu de l'amour et du hasard* à 20 h, deux places au plein tarif :
+    58 € ; après confirmation, « Billets · 1 » et « Mes billets » montre la séance de 20 h, deux places, 58 €.
+
 ## Hors périmètre à ce stade
 
-Authentification et droits d'accès, persistance en base, réservation simulée, confirmation et « Mes billets »
-(lot suivant), menu global,
+Authentification et droits d'accès, persistance en base, paiement et émission de billets réels (la réservation
+est une simulation en mémoire de l'onglet), menu global,
 branchement des séances au BFF, service du build React par ASP.NET Core et publication.
