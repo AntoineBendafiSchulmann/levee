@@ -1,4 +1,4 @@
-# Levée de réserves
+# levee
 
 Socle technique : une API ASP.NET Core et un client React + Vite en TypeScript strict.
 En développement, le navigateur ne parle qu'à Vite, qui relaie `/bff` vers ASP.NET Core.
@@ -11,8 +11,8 @@ Navigateur ──► http://localhost:5173  (Vite)
 ## Structure
 
 ```
-src/LeveeReserves.Api/   API ASP.NET Core appelée par le client
-src/client/              Client React + Vite
+src/Levee.Api/   API ASP.NET Core appelée par le client
+src/client/      Client React + Vite
 ```
 
 ## Prérequis
@@ -52,7 +52,7 @@ docker compose ps                              # état attendu : healthy
 docker compose stop                            # arrêt, données conservées
 ```
 
-Les données vivent dans le volume `levee-reserves_pgdata`. `docker compose down` le conserve aussi ;
+Les données vivent dans le volume `levee_pgdata`. `docker compose down` le conserve aussi ;
 seul `docker compose down -v` le supprime. Le mot de passe est fixé à la création du volume : le
 changer ensuite dans `.env` ne modifie pas une base existante.
 
@@ -61,7 +61,7 @@ changer ensuite dans `.env` ne modifie pas une base existante.
 Dans deux terminaux, depuis la racine :
 
 ```
-dotnet run --project src/LeveeReserves.Api     # http://localhost:5080
+dotnet run --project src/Levee.Api             # http://localhost:5080
 npm --prefix src/client run dev                # http://localhost:5173
 ```
 
@@ -71,7 +71,7 @@ le service, l'environnement et un horodatage UTC.
 ## Validation
 
 ```
-dotnet build LeveeReserves.slnx
+dotnet build Levee.slnx
 npm --prefix src/client run lint
 npm --prefix src/client run typecheck
 npm --prefix src/client run build              # sortie dans src/client/dist/, ignorée par Git
@@ -93,5 +93,5 @@ Dans le navigateur :
 
 ## Hors périmètre à ce stade
 
-Authentification et droits d'accès, persistance en base, stockage des photos, exposition du cycle
-de vie par l'API et écrans du parcours, service du build React par ASP.NET Core et publication.
+Authentification et droits d'accès, persistance en base, service du build React par ASP.NET Core
+et publication.

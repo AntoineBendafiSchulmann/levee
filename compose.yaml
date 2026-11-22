@@ -1,5 +1,5 @@
 # Base PostgreSQL de développement local. Les identifiants viennent du fichier .env, non suivi par Git.
-name: levee-reserves
+name: levee
 
 services:
   postgres:

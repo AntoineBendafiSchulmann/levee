@@ -68,7 +68,7 @@ export function App() {
 
   return (
     <main>
-      <h1>Levée de réserves</h1>
+      <h1>levee</h1>
       <h2>État de l’API</h2>
       <EtatAffiche chargement={chargement} />
     </main>
