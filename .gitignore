@@ -1,0 +1,7 @@
+# .NET
+bin/
+obj/
+
+# Client
+node_modules/
+src/client/dist/
