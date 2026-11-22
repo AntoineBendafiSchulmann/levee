@@ -1,3 +1,5 @@
+import { useLayoutEffect } from 'react';
+
 import { Affiche } from './Affiche';
 import type { DiapoAffiche } from './diapos';
 import { useCarrousel } from './useCarrousel';
@@ -6,6 +8,10 @@ interface Props {
   readonly diapos: readonly DiapoAffiche[];
   /** Appelée quand on active l'affiche déjà centrée. Une autre affiche est d'abord centrée. */
   readonly onActiver: (diapo: DiapoAffiche) => void;
+  /** Position de défilement à restituer au montage (retour sur l'accueil). */
+  readonly lirePosition: () => number;
+  /** Appelée à chaque défilement, pour mémoriser la position. */
+  readonly onPosition: (position: number) => void;
 }
 
 /*
@@ -22,7 +28,7 @@ const DEFILEUR = [
   'pt-(--marge-haut) pb-(--marge-bas)',
   'min-h-[calc(var(--largeur-min)*1.5_+_var(--hors-affiche))]',
   'max-h-[calc(var(--largeur-max)*1.5_+_var(--hors-affiche))]',
-  '[--largeur-min:120px] [--largeur-max:200px] tablette:[--largeur-max:280px] bureau:[--largeur-max:300px]',
+  '[--largeur-min:112px] [--largeur-max:200px] tablette:[--largeur-max:280px] bureau:[--largeur-max:300px]',
   '[--legende:71px] [--marge-haut:6px] [--marge-bas:10px]',
   '[--hors-affiche:calc(var(--legende)_+_var(--marge-haut)_+_var(--marge-bas))]',
 ].join(' ');
@@ -34,8 +40,14 @@ const LARGEUR_DIAPO =
 const BOUTON_FLECHE =
   'grid size-11 place-items-center rounded-full border border-contour text-lg hover:bg-surface-survol';
 
-export function CarrouselAffiches({ diapos, onActiver }: Props) {
+export function CarrouselAffiches({ diapos, onActiver, lirePosition, onPosition }: Props) {
   const { defileurRef, defiler, surTouche, centrer, estCentree } = useCarrousel(diapos.length);
+
+  useLayoutEffect(() => {
+    if (defileurRef.current !== null) {
+      defileurRef.current.scrollLeft = lirePosition();
+    }
+  }, [defileurRef, lirePosition]);
 
   return (
     <section
@@ -46,6 +58,9 @@ export function CarrouselAffiches({ diapos, onActiver }: Props) {
       <div
         ref={defileurRef}
         onKeyDown={surTouche}
+        onScroll={(evenement) => {
+          onPosition(evenement.currentTarget.scrollLeft);
+        }}
         className={DEFILEUR}
       >
         {diapos.map((diapo) => (

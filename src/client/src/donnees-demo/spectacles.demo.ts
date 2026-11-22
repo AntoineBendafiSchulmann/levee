@@ -1,9 +1,10 @@
 import type { Spectacle } from '../domaine/types';
 
 /*
- * DONNÉES FICTIVES — démonstration du lot 1.
- * Les pièces de Molière, Marivaux, Rostand et Sartre existent ; les salles, les horaires
+ * DONNÉES FICTIVES — démonstration.
+ * Les pièces de Molière, Marivaux, Rostand et Sartre existent ; les salles, les horaires, les durées
  * et les autres titres sont inventés. Les affiches sont des compositions graphiques, sans image.
+ * Une durée absente (tableau vide) est volontaire : elle sert à montrer le cas « durée inconnue ».
  */
 
 const CREME = 'oklch(0.95 0.03 90)';
@@ -14,6 +15,8 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     titre: 'Le Misanthrope',
     auteur: 'Molière',
     salleId: 'ambroise',
+    genres: ['comedie', 'classique'],
+    durees: [{ minutes: 110, source: 'Théâtre' }],
     seances: [
       { jour: '2026-11-26', debutMinutes: 1200 },
       { jour: '2026-11-27', debutMinutes: 1200 },
@@ -33,6 +36,8 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     titre: 'Un dîner chez les Vasseur',
     auteur: 'Claire Ormesson',
     salleId: 'faubourg',
+    genres: ['comedie', 'contemporain'],
+    durees: [],
     seances: [
       { jour: '2026-11-26', debutMinutes: 1140 },
       { jour: '2026-11-27', debutMinutes: 1140 },
@@ -51,6 +56,11 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     titre: 'Le Jeu de l’amour et du hasard',
     auteur: 'Marivaux',
     salleId: 'rotonde',
+    genres: ['comedie', 'classique'],
+    durees: [
+      { minutes: 105, source: 'Site du théâtre' },
+      { minutes: 115, source: 'Billetterie partenaire' },
+    ],
     seances: [
       { jour: '2026-11-27', debutMinutes: 1200 },
       { jour: '2026-11-28', debutMinutes: 990 },
@@ -78,6 +88,8 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     titre: 'L’Avare',
     auteur: 'Molière',
     salleId: 'boulevards',
+    genres: ['comedie', 'classique'],
+    durees: [{ minutes: 90, source: 'Théâtre' }],
     seances: [
       { jour: '2026-11-26', debutMinutes: 1200 },
       { jour: '2026-11-27', debutMinutes: 1230 },
@@ -97,6 +109,8 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     titre: 'Cyrano de Bergerac',
     auteur: 'Edmond Rostand',
     salleId: 'canal',
+    genres: ['classique', 'comedie'],
+    durees: [{ minutes: 165, source: 'Théâtre' }],
     seances: [
       { jour: '2026-11-26', debutMinutes: 1170 },
       { jour: '2026-11-28', debutMinutes: 1200 },
@@ -115,6 +129,8 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     titre: 'La Clé sous la porte',
     auteur: 'Jules Arnaud',
     salleId: 'recollets',
+    genres: ['comedie', 'contemporain'],
+    durees: [{ minutes: 80, source: 'Théâtre' }],
     seances: [
       { jour: '2026-11-26', debutMinutes: 1215 },
       { jour: '2026-11-27', debutMinutes: 1215 },
@@ -133,6 +149,8 @@ export const DEMO_SPECTACLES: readonly Spectacle[] = [
     titre: 'Huis clos',
     auteur: 'Jean-Paul Sartre',
     salleId: 'recollets',
+    genres: ['drame', 'contemporain'],
+    durees: [{ minutes: 90, source: 'Théâtre' }],
     seances: [
       { jour: '2026-11-26', debutMinutes: 1155 },
       { jour: '2026-11-28', debutMinutes: 1095 },

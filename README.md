@@ -1,7 +1,7 @@
 # levee
 
 Une API ASP.NET Core et un client React + Vite en TypeScript strict, stylé avec Tailwind CSS.
-Le client affiche l'accueil « Que voir ce soir ? » avec des données de démonstration (lot 1).
+Le client propose le parcours accueil → critères → résultats avec des données de démonstration (lots 1 et 2).
 En développement, le navigateur ne parle qu'à Vite, qui relaie `/bff` vers ASP.NET Core.
 
 ```
@@ -15,7 +15,11 @@ Navigateur ──► http://localhost:5173  (Vite)
 src/Levee.Api/                  API ASP.NET Core appelée par le client
 src/client/                     Client React + Vite
   src/accueil/                  Accueil : page, carrousel d'affiches, affiche, actions
-  src/domaine/                  Types et fonctions pures (heures, jours, programme)
+  src/criteres/                 Formulaire de critères et feuille qui le contient
+  src/resultats/                Page des résultats, carte d'une séance, frise horaire
+  src/parcours/                 État de navigation (écran, critères, positions de défilement)
+  src/commun/                   Éléments partagés (en-tête)
+  src/domaine/                  Types et fonctions pures : évaluation d'une séance, résultats, temps (+ tests)
   src/donnees-demo/             DONNÉES FICTIVES de démonstration, importées par App.tsx seul
   src/technique/                Contrôle technique de l'API, servi sur /technique
 ```
@@ -80,6 +84,7 @@ et un horodatage UTC.
 dotnet build Levee.slnx
 npm --prefix src/client run lint
 npm --prefix src/client run typecheck
+npm --prefix src/client test                   # tests unitaires du domaine (Vitest)
 npm --prefix src/client run build              # sortie dans src/client/dist/, ignorée par Git
 ```
 
@@ -99,16 +104,24 @@ Dans le navigateur :
 3. ASP.NET Core arrêté, un rechargement de `/technique` affiche « Erreur : L’API est injoignable
    ou en erreur (HTTP 502). ».
 4. `http://localhost:5173/` affiche l'accueil : titre de l'onglet « levee », surtitre « Jeudi 26
-   novembre · à l’affiche » (date de démonstration), critères marqués « lecture seule », bouton
-   « Voir les séances de ce soir » avec « 6 séances ce soir » et « Préparer une autre sortie ».
+   novembre · à l’affiche » (date de démonstration), trois critères, et le bouton « Voir les séances
+   de ce soir » avec ses compteurs (« 4 possibles · 1 à vérifier · 1 impossible »).
 5. Le carrousel défile au doigt, avec les flèches (à partir de 700 px de large) et au clavier
    (Tab, ← → Début Fin) ; l'affiche centrée est de face, les voisines inclinées et assombries.
    Avec « réduire les animations » activé dans le système, les affiches restent à plat.
-6. À 375 × 667, « Voir les séances » et « Préparer une autre sortie » sont visibles sans défilement.
-   Les trois boutons de destination affichent un avis « Provisoire » : leurs écrans arrivent aux
-   lots suivants.
+6. « Préparer une autre sortie » (ou un critère) ouvre la feuille de critères : chaque changement
+   s'applique tout de suite, Échap la ferme et le focus revient à l'élément qui l'a ouverte.
+   « Voir N séances » ouvre les résultats (`/seances`) ; le retour du navigateur ramène à l'accueil
+   avec les critères conservés. Une ouverture directe de `/seances` utilise les critères de démonstration.
+7. Parcours de référence : samedi 28 novembre, départ République à 18 h 30. Avec « Sortie au plus
+   tard à » 22 h 00, *Le Jeu de l’amour et du hasard* de 20 h 00 est « À temps » ; à 21 h 50 il devient
+   « Fin incertaine » (fin entre 21 h 45 et 21 h 55). En avançant le départ à 16 h 00, ses deux
+   représentations (16 h 30 et 20 h 00) apparaissent comme deux cartes distinctes.
+8. À 375 × 667, « Voir les séances » et « Préparer une autre sortie » sont visibles sans défilement,
+   y compris quand l'avis « Provisoire » de l'activation d'une affiche (fiche : lot suivant) est affiché.
+   Sous environ 650 px de hauteur, la page peut défiler quand cet avis apparaît.
 
 ## Hors périmètre à ce stade
 
-Authentification et droits d'accès, persistance en base, liste des séances, fiche séance,
-réservation, branchement des séances au BFF, service du build React par ASP.NET Core et publication.
+Authentification et droits d'accès, persistance en base, fiche séance, réservation, menu global,
+branchement des séances au BFF, service du build React par ASP.NET Core et publication.

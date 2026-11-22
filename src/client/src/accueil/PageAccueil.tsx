@@ -1,48 +1,63 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { compterSeances } from '../domaine/programme';
+import { EnTete } from '../commun/EnTete';
+import { FeuilleCriteres } from '../criteres/FeuilleCriteres';
+import { FormulaireCriteres, type OptionsCriteres } from '../criteres/FormulaireCriteres';
+import { libelleBoutonVoir, libelleCompteurs, type Resultats } from '../domaine/resultats';
 import { formaterHeure, libelleJourCourt, libelleJourDu, libelleJourLong } from '../domaine/temps';
-import type { CriteresSortie, JourIso, Salle, Spectacle } from '../domaine/types';
+import type { JourIso, Salle, Spectacle } from '../domaine/types';
+import type { Parcours } from '../parcours/useParcours';
 import { ActionsAccueil } from './ActionsAccueil';
 import { CarrouselAffiches } from './CarrouselAffiches';
 import { construireDiapos } from './diapos';
 
 interface Props {
-  readonly criteres: CriteresSortie;
+  readonly parcours: Parcours;
   /** Jour courant : « ce soir » désigne ce jour-là. */
   readonly aujourdhui: JourIso;
   readonly spectacles: readonly Spectacle[];
   readonly salles: readonly Salle[];
-}
-
-function libelleNombre(nombre: number, quand: string): string {
-  if (nombre === 0) {
-    return `Aucune séance ${quand}`;
-  }
-  return `${String(nombre)} ${nombre > 1 ? 'séances' : 'séance'} ${quand}`;
+  readonly options: OptionsCriteres;
+  readonly resultats: Resultats;
 }
 
 /**
- * Accueil « Que voir ce soir ? ». Les destinations des lots suivants (liste des séances, édition des
- * critères, fiche séance) affichent pour l'instant un avis provisoire.
+ * Accueil « Que voir ce soir ? ». « Voir les séances » ouvre les résultats ; « Préparer une autre
+ * sortie » et les pastilles ouvrent la feuille de critères. L'activation d'une affiche affiche encore
+ * un avis provisoire : la fiche séance arrive dans un lot suivant.
  */
-export function PageAccueil({ criteres, aujourdhui, spectacles, salles }: Props) {
+export function PageAccueil({ parcours, aujourdhui, spectacles, salles, options, resultats }: Props) {
+  const { criteres, lirePosition, memoriserPosition } = parcours;
   const [avis, setAvis] = useState<string | null>(null);
+  const titre = useRef<HTMLHeadingElement>(null);
+  const focaliser = parcours.naviguee;
   const diapos = construireDiapos(spectacles, salles, criteres.jour, aujourdhui);
   const quand = libelleJourDu(criteres.jour, aujourdhui);
+  const origine = options.origines.find((o) => o.id === criteres.origine)?.libelle ?? criteres.origine;
+  // Identité stable : le carrousel ne restitue sa position qu'au montage.
+  const lirePositionAffiches = useCallback(() => lirePosition('affiches'), [lirePosition]);
+
+  // Après une navigation (lien, retour du navigateur), le focus passe au titre de la page.
+  useEffect(() => {
+    if (focaliser) {
+      titre.current?.focus({ preventScroll: true });
+    }
+  }, [focaliser]);
 
   return (
     <div className="flex h-dvh flex-col">
-      <header className="flex flex-none items-center border-b border-filet px-4 py-1.5 tablette:px-6 tablette:py-2 bureau:px-8">
-        <p className="flex min-h-11 items-center font-editorial text-[34px] leading-none italic">levee</p>
-      </header>
+      <EnTete />
 
       <main className="flex flex-1 flex-col bureau:grid bureau:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] bureau:grid-rows-[1fr_auto_auto_1fr] bureau:gap-x-6">
         <div className="flex flex-col gap-1.5 px-4 pt-2.5 tablette:px-6 tablette:pt-7 tablette:pb-2 bureau:col-start-1 bureau:row-start-2 bureau:pt-0 bureau:pr-0 bureau:pb-5 bureau:pl-14">
           <p className="text-xs leading-[1.2] font-semibold tracking-[0.14em] text-texte-doux uppercase">
             {libelleJourLong(criteres.jour)} · à l’affiche
           </p>
-          <h1 className="font-editorial text-[40px] leading-[0.98] font-normal tracking-[-0.01em] tablette:text-[60px] bureau:text-[84px]">
+          <h1
+            ref={titre}
+            tabIndex={-1}
+            className="font-editorial text-[40px] leading-[0.98] font-normal tracking-[-0.01em] outline-none tablette:text-[60px] bureau:text-[84px]"
+          >
             Que voir <span className="text-corail italic">ce soir</span> ?
           </h1>
         </div>
@@ -50,6 +65,10 @@ export function PageAccueil({ criteres, aujourdhui, spectacles, salles }: Props)
         <div className="flex flex-1 flex-col bureau:col-start-2 bureau:row-span-4 bureau:row-start-1">
           <CarrouselAffiches
             diapos={diapos}
+            lirePosition={lirePositionAffiches}
+            onPosition={(position) => {
+              memoriserPosition('affiches', position);
+            }}
             onActiver={(diapo) => {
               setAvis(`la fiche de « ${diapo.titre} » arrive dans un lot suivant.`);
             }}
@@ -59,28 +78,33 @@ export function PageAccueil({ criteres, aujourdhui, spectacles, salles }: Props)
         <div className="flex w-full max-w-[560px] flex-col px-4 pb-3 tablette:mx-auto tablette:px-6 tablette:pt-2 tablette:pb-7 bureau:col-start-1 bureau:row-start-3 bureau:mx-0 bureau:p-0 bureau:pl-14">
           <div role="status">
             {avis === null ? null : (
-              <p className="mb-2 rounded-lg border border-dashed border-contour px-3 py-2 text-[13px] leading-snug text-texte-doux">
+              <p className="mb-1.5 rounded-lg border border-dashed border-contour px-3 py-1 text-xs leading-4 text-texte-doux">
                 <strong className="font-bold text-texte">Provisoire</strong> · {avis}
               </p>
             )}
           </div>
           <ActionsAccueil
             criteres={[
-              { cle: 'Depuis', valeur: criteres.origine },
+              { cle: 'Depuis', valeur: origine },
               { cle: '', valeur: libelleJourCourt(criteres.jour, aujourdhui) },
-              { cle: 'Avant', valeur: formaterHeure(criteres.limiteMinutes) },
+              { cle: 'Sortie au plus tard à', valeur: formaterHeure(criteres.limiteMinutes) },
             ]}
             libelleVoir={`Voir les séances de ${quand}`}
-            detailVoir={libelleNombre(compterSeances(spectacles, criteres.jour), quand)}
-            onVoir={() => {
-              setAvis('la liste des séances arrive au prochain lot.');
-            }}
-            onPreparer={() => {
-              setAvis('la modification des critères arrive au prochain lot.');
-            }}
+            detailVoir={libelleCompteurs(resultats.compteurs, resultats.impossiblesMasquees)}
+            onVoir={parcours.voirSeances}
+            onModifier={parcours.ouvrirFeuille}
           />
         </div>
       </main>
+
+      <FeuilleCriteres
+        ouverte={parcours.feuilleOuverte}
+        onFermer={parcours.fermerFeuille}
+        libelleVoir={libelleBoutonVoir(resultats.visibles.length)}
+        onVoir={parcours.voirSeances}
+      >
+        <FormulaireCriteres criteres={criteres} options={options} onChange={parcours.modifierCriteres} />
+      </FeuilleCriteres>
     </div>
   );
 }

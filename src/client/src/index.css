@@ -18,6 +18,8 @@
   --color-texte-doux: oklch(0.74 0.015 285);
   --color-corail: oklch(0.74 0.16 40);
   --color-corail-vif: oklch(0.8 0.14 40);
+  --color-ok: oklch(0.82 0.13 155);
+  --color-attention: oklch(0.84 0.13 82);
   --color-danger: oklch(0.76 0.14 25);
 
   --font-sans: 'Bricolage Grotesque Variable', system-ui, sans-serif;

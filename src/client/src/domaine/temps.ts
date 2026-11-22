@@ -7,6 +7,19 @@ export function formaterHeure(minutes: number): string {
   return `${String(h)}h${String(m).padStart(2, '0')}`;
 }
 
+/** 105 → « 105 min » : un nombre de minutes tel quel, pour un écart plutôt qu'une durée de spectacle. */
+export function libelleMinutes(minutes: number): string {
+  return `${String(minutes)} min`;
+}
+
+/** 110 → « 1 h 50 », 45 → « 45 min ». */
+export function formaterDuree(minutes: number): string {
+  if (minutes < 60) {
+    return `${String(minutes)} min`;
+  }
+  return `${String(Math.floor(minutes / 60))} h ${String(minutes % 60).padStart(2, '0')}`;
+}
+
 /**
  * Les dates ISO sont interprétées et formatées en UTC : le jour affiché ne dépend donc
  * jamais du fuseau horaire de l'appareil.
