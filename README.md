@@ -8,6 +8,17 @@ Navigateur ──► http://localhost:5173  (Vite)
                   └─ /bff/* ──proxy──► http://localhost:5080  (ASP.NET Core)
 ```
 
+## Structure
+
+```
+src/LeveeReserves.Api/             API ASP.NET Core appelée par le client
+src/LeveeReserves.Domain/          Règles métier : cycle de vie d'une réserve, sans dépendance
+src/client/                        Client React + Vite
+tests/LeveeReserves.Domain.Tests/  Tests xUnit des règles métier
+```
+
+Le domaine n'est pas encore exposé par l'API : ses règles ne sont joignables que par les tests.
+
 ## Prérequis
 
 - SDK .NET 10. `global.json` demande la version `10.0.100` avec `rollForward: latestFeature` :
@@ -37,6 +48,7 @@ le service, l'environnement et un horodatage UTC.
 
 ```
 dotnet build LeveeReserves.slnx
+dotnet test LeveeReserves.slnx                 # règles métier du domaine
 npm --prefix src/client run lint
 npm --prefix src/client run typecheck
 npm --prefix src/client run build              # sortie dans src/client/dist/, ignorée par Git
@@ -56,7 +68,7 @@ Dans le navigateur :
    au port 5080.
 3. ASP.NET Core arrêté, un rechargement affiche le message d'erreur.
 
-## Hors périmètre de ce socle
+## Hors périmètre à ce stade
 
-Authentification, base de données, photos, règles métier, service du build React par ASP.NET Core
-et publication.
+Authentification et droits d'accès, base de données, stockage des photos, exposition du cycle de vie
+par l'API et écrans du parcours, service du build React par ASP.NET Core et publication.
