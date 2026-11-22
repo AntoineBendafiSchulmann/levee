@@ -1,4 +1,4 @@
-import { useLayoutEffect } from 'react';
+import { useEffect, useEffectEvent, useLayoutEffect } from 'react';
 
 import { Affiche } from './Affiche';
 import type { DiapoAffiche } from './diapos';
@@ -12,6 +12,8 @@ interface Props {
   readonly lirePosition: () => number;
   /** Appelée à chaque défilement, pour mémoriser la position. */
   readonly onPosition: (position: number) => void;
+  /** Clé de l'affiche d'où l'on revient d'une fiche : elle est ramenée en vue si elle est hors de vue ou rognée. */
+  readonly cleRetour: string | null;
 }
 
 /*
@@ -37,17 +39,34 @@ const DEFILEUR = [
 const LARGEUR_DIAPO =
   '[--largeur-diapo:clamp(var(--largeur-min),calc((100cqh_-_var(--legende))*2/3),var(--largeur-max))]';
 
-const BOUTON_FLECHE =
-  'grid size-11 place-items-center rounded-full border border-contour text-lg hover:bg-surface-survol';
+// `aria-disabled` (et non `disabled`) : le bouton garde sa place et reste focusable, donc le focus ne se perd pas
+// quand une flèche atteint le bord après son activation ; le clic est ignoré dans `defiler`.
+const BOUTON_FLECHE = [
+  'grid size-11 place-items-center rounded-full border border-contour text-lg hover:bg-surface-survol',
+  'aria-disabled:cursor-default aria-disabled:opacity-35 aria-disabled:hover:bg-transparent',
+].join(' ');
 
-export function CarrouselAffiches({ diapos, onActiver, lirePosition, onPosition }: Props) {
-  const { defileurRef, defiler, surTouche, centrer, estCentree } = useCarrousel(diapos.length);
+export function CarrouselAffiches({ diapos, onActiver, lirePosition, onPosition, cleRetour }: Props) {
+  const { defileurRef, defiler, surTouche, centrer, estCentree, ramenerEnVue, peutReculer, peutAvancer } = useCarrousel(diapos.length);
+  const ramenerOrigine = useEffectEvent((cle: string) => {
+    const diapo = defileurRef.current?.querySelector<HTMLElement>(`[data-diapo][data-cle="${CSS.escape(cle)}"]`);
+    if (diapo !== null && diapo !== undefined) {
+      ramenerEnVue(diapo);
+    }
+  });
 
   useLayoutEffect(() => {
     if (defileurRef.current !== null) {
       defileurRef.current.scrollLeft = lirePosition();
     }
   }, [defileurRef, lirePosition]);
+
+  // Le défilement est restitué avant (useLayoutEffect) ; ici, on ne corrige que si l'affiche d'origine n'est pas visible.
+  useEffect(() => {
+    if (cleRetour !== null) {
+      ramenerOrigine(cleRetour);
+    }
+  }, [cleRetour]);
 
   return (
     <section
@@ -68,6 +87,7 @@ export function CarrouselAffiches({ diapos, onActiver, lirePosition, onPosition 
             key={diapo.id}
             type="button"
             data-diapo=""
+            data-cle={diapo.id}
             // Seul le focus clavier (Tab) centre l'affiche : l'anneau de focus n'est jamais rogné. Le focus
             // donné par la souris ou le doigt ne déplace rien ; le centrage se fait alors au clic.
             onFocus={(evenement) => {
@@ -104,6 +124,7 @@ export function CarrouselAffiches({ diapos, onActiver, lirePosition, onPosition 
         <button
           type="button"
           aria-label="Affiche précédente"
+          aria-disabled={!peutReculer}
           className={BOUTON_FLECHE}
           onClick={() => {
             defiler(-1);
@@ -114,6 +135,7 @@ export function CarrouselAffiches({ diapos, onActiver, lirePosition, onPosition 
         <button
           type="button"
           aria-label="Affiche suivante"
+          aria-disabled={!peutAvancer}
           className={BOUTON_FLECHE}
           onClick={() => {
             defiler(1);

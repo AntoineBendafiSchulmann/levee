@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useSyncExternalStore, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
 
 const REQUETE_MOUVEMENT_REDUIT = '(prefers-reduced-motion: reduce)';
 
@@ -23,6 +23,32 @@ function borner(valeur: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, valeur));
 }
 
+/** Marge de tolérance (px) sur la position de défilement : les positions sont fractionnaires selon le zoom. */
+const TOLERANCE_PX = 2;
+
+export interface EtatFleches {
+  readonly peutReculer: boolean;
+  readonly peutAvancer: boolean;
+}
+
+/**
+ * Déplacements réellement possibles d'après la position de défilement. Les marges des extrémités centrent la
+ * première et la dernière affiche : le premier arrêt est à 0, le dernier à `scrollWidth - clientWidth`. Si tout
+ * tient dans le défileur (rien à défiler), aucun déplacement n'est possible.
+ */
+export function etatFleches(scrollLeft: number, scrollWidth: number, clientWidth: number): EtatFleches {
+  const maximum = scrollWidth - clientWidth;
+  if (maximum <= TOLERANCE_PX) {
+    return { peutReculer: false, peutAvancer: false };
+  }
+  return { peutReculer: scrollLeft > TOLERANCE_PX, peutAvancer: scrollLeft < maximum - TOLERANCE_PX };
+}
+
+/** Vrai si la diapositive est entièrement dans la partie visible du défileur (ni hors de vue ni rognée). */
+export function estEntierementVisible(debut: number, largeur: number, scrollLeft: number, clientWidth: number): boolean {
+  return debut - scrollLeft >= -TOLERANCE_PX && debut + largeur - scrollLeft <= clientWidth + TOLERANCE_PX;
+}
+
 /**
  * Logique du carrousel d'affiches : défilement natif avec accroche (scroll-snap), profondeur pilotée
  * par la position de défilement, flèches et clavier. Chaque diapositive est un élément
@@ -33,6 +59,7 @@ function borner(valeur: number, min: number, max: number): number {
 export function useCarrousel(nombre: number) {
   const reduire = useMouvementReduit();
   const defileurRef = useRef<HTMLDivElement>(null);
+  const [fleches, setFleches] = useState<EtatFleches>({ peutReculer: false, peutAvancer: false });
 
   const diapos = useCallback((): HTMLElement[] => {
     const defileur = defileurRef.current;
@@ -63,6 +90,18 @@ export function useCarrousel(nombre: number) {
     }
   }, [diapos, reduire]);
 
+  /** Met à jour l'état des flèches d'après le défilement réel (position, taille, nombre d'affiches). */
+  const actualiserFleches = useCallback(() => {
+    const defileur = defileurRef.current;
+    if (defileur === null) {
+      return;
+    }
+    const etat = etatFleches(defileur.scrollLeft, defileur.scrollWidth, defileur.clientWidth);
+    setFleches((precedent) =>
+      precedent.peutReculer === etat.peutReculer && precedent.peutAvancer === etat.peutAvancer ? precedent : etat,
+    );
+  }, []);
+
   useEffect(() => {
     const defileur = defileurRef.current;
     if (defileur === null) {
@@ -76,9 +115,11 @@ export function useCarrousel(nombre: number) {
       image = requestAnimationFrame(() => {
         image = 0;
         appliquerProfondeur();
+        actualiserFleches();
       });
     };
     appliquerProfondeur();
+    planifier();
     defileur.addEventListener('scroll', planifier, { passive: true });
     const observateur = new ResizeObserver(planifier);
     observateur.observe(defileur);
@@ -87,16 +128,23 @@ export function useCarrousel(nombre: number) {
       observateur.disconnect();
       cancelAnimationFrame(image);
     };
-  }, [appliquerProfondeur, nombre]);
+  }, [appliquerProfondeur, actualiserFleches, nombre]);
 
   const comportement: ScrollBehavior = reduire ? 'auto' : 'smooth';
 
-  /** Flèches : avance d'une affiche (largeur d'une diapositive plus l'espace entre deux). */
+  /**
+   * Flèches : avance d'une affiche (largeur d'une diapositive plus l'espace entre deux). Sans effet vers un bord
+   * déjà atteint : la disponibilité est relue sur le défileur, pas sur l'état affiché.
+   */
   const defiler = useCallback(
     (sens: -1 | 1) => {
       const defileur = defileurRef.current;
       const [premiere, seconde] = diapos();
       if (defileur === null || premiere === undefined) {
+        return;
+      }
+      const possible = etatFleches(defileur.scrollLeft, defileur.scrollWidth, defileur.clientWidth);
+      if (sens === -1 ? !possible.peutReculer : !possible.peutAvancer) {
         return;
       }
       const pas = seconde === undefined ? premiere.offsetWidth : seconde.offsetLeft - premiere.offsetLeft;
@@ -110,6 +158,17 @@ export function useCarrousel(nombre: number) {
       diapo.scrollIntoView({ inline: 'center', block: 'nearest', behavior: comportement });
     },
     [comportement],
+  );
+
+  /** Au retour d'une fiche : ramène l'affiche d'origine au centre seulement si elle est hors de vue ou rognée. */
+  const ramenerEnVue = useCallback(
+    (diapo: HTMLElement) => {
+      const defileur = defileurRef.current;
+      if (defileur !== null && !estEntierementVisible(diapo.offsetLeft, diapo.offsetWidth, defileur.scrollLeft, defileur.clientWidth)) {
+        centrer(diapo);
+      }
+    },
+    [centrer],
   );
 
   const estCentree = useCallback((diapo: HTMLElement): boolean => {
@@ -151,5 +210,5 @@ export function useCarrousel(nombre: number) {
     [diapos, centrer],
   );
 
-  return { defileurRef, defiler, surTouche, centrer, estCentree };
+  return { defileurRef, defiler, surTouche, centrer, estCentree, ramenerEnVue, ...fleches };
 }

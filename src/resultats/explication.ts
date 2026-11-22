@@ -66,3 +66,16 @@ export function explicationSeance(resultat: ResultatSeance, criteres: CriteresSo
         : `Fin calculée à ${formaterHeure(fin.min)}, soit ${libelleMinutes(fin.min - criteres.limiteMinutes)} après votre limite.`;
   }
 }
+
+/**
+ * Phrase de verdict de la fiche : l'explication de la carte, ou, quand la séance est « à temps »,
+ * la marge à l'arrivée et à la sortie (avec la durée la plus longue quand deux durées sont annoncées).
+ */
+export function verdictSeance(resultat: ResultatSeance, criteres: CriteresSortie, origineLibelle: string): string {
+  const { statut, margeArriveeMinutes: marge, fin } = resultat.evaluation;
+  if (statut !== 'a-temps' || marge === null || fin === null) {
+    return explicationSeance(resultat, criteres, origineLibelle) ?? '';
+  }
+  const memeAvecLaPlusLongue = dureesDistinctes(resultat).length > 1 ? ' même avec la durée la plus longue' : '';
+  return `Arrivée estimée ${libelleMinutes(marge)} avant le début, sortie ${libelleMinutes(criteres.limiteMinutes - fin.max)} avant votre limite${memeAvecLaPlusLongue}.`;
+}

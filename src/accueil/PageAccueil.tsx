@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { EnTete } from '../commun/EnTete';
 import { FeuilleCriteres } from '../criteres/FeuilleCriteres';
@@ -6,6 +6,7 @@ import { FormulaireCriteres, type OptionsCriteres } from '../criteres/Formulaire
 import { libelleBoutonVoir, libelleCompteurs, type Resultats } from '../domaine/resultats';
 import { formaterHeure, libelleJourCourt, libelleJourDu, libelleJourLong } from '../domaine/temps';
 import type { JourIso, Salle, Spectacle } from '../domaine/types';
+import { focaliserCle } from '../parcours/focus';
 import type { Parcours } from '../parcours/useParcours';
 import { ActionsAccueil } from './ActionsAccueil';
 import { CarrouselAffiches } from './CarrouselAffiches';
@@ -23,26 +24,30 @@ interface Props {
 
 /**
  * Accueil « Que voir ce soir ? ». « Voir les séances » ouvre les résultats ; « Préparer une autre
- * sortie » et les pastilles ouvrent la feuille de critères. L'activation d'une affiche affiche encore
- * un avis provisoire : la fiche séance arrive dans un lot suivant.
+ * sortie » et les pastilles ouvrent la feuille de critères ; activer l'affiche centrée ouvre la fiche
+ * de la pièce.
  */
 export function PageAccueil({ parcours, aujourdhui, spectacles, salles, options, resultats }: Props) {
   const { criteres, lirePosition, memoriserPosition } = parcours;
-  const [avis, setAvis] = useState<string | null>(null);
   const titre = useRef<HTMLHeadingElement>(null);
   const focaliser = parcours.naviguee;
-  const diapos = construireDiapos(spectacles, salles, criteres.jour, aujourdhui);
+  const { cleRetour } = parcours;
+  const diapos = construireDiapos(spectacles, salles, criteres, aujourdhui);
   const quand = libelleJourDu(criteres.jour, aujourdhui);
   const origine = options.origines.find((o) => o.id === criteres.origine)?.libelle ?? criteres.origine;
   // Identité stable : le carrousel ne restitue sa position qu'au montage.
   const lirePositionAffiches = useCallback(() => lirePosition('affiches'), [lirePosition]);
 
-  // Après une navigation (lien, retour du navigateur), le focus passe au titre de la page.
+  // Après une navigation (lien, retour du navigateur), le focus passe au titre de la page ; au retour
+  // d'une fiche, il revient sur l'affiche d'où l'on est parti.
   useEffect(() => {
-    if (focaliser) {
+    if (!focaliser) {
+      return;
+    }
+    if (cleRetour === null || focaliserCle(cleRetour) === null) {
       titre.current?.focus({ preventScroll: true });
     }
-  }, [focaliser]);
+  }, [focaliser, cleRetour]);
 
   return (
     <div className="flex h-dvh flex-col">
@@ -66,23 +71,17 @@ export function PageAccueil({ parcours, aujourdhui, spectacles, salles, options,
           <CarrouselAffiches
             diapos={diapos}
             lirePosition={lirePositionAffiches}
+            cleRetour={cleRetour}
             onPosition={(position) => {
               memoriserPosition('affiches', position);
             }}
             onActiver={(diapo) => {
-              setAvis(`la fiche de « ${diapo.titre} » arrive dans un lot suivant.`);
+              parcours.ouvrirFiche({ type: 'piece', id: diapo.id }, 'accueil', diapo.id);
             }}
           />
         </div>
 
         <div className="flex w-full max-w-[560px] flex-col px-4 pb-3 tablette:mx-auto tablette:px-6 tablette:pt-2 tablette:pb-7 bureau:col-start-1 bureau:row-start-3 bureau:mx-0 bureau:p-0 bureau:pl-14">
-          <div role="status">
-            {avis === null ? null : (
-              <p className="mb-1.5 rounded-lg border border-dashed border-contour px-3 py-1 text-xs leading-4 text-texte-doux">
-                <strong className="font-bold text-texte">Provisoire</strong> · {avis}
-              </p>
-            )}
-          </div>
           <ActionsAccueil
             criteres={[
               { cle: 'Depuis', valeur: origine },

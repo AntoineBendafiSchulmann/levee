@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { normaliser, pluriel } from './texte';
-import { formaterDuree, formaterHeure, libelleJourCourt, libelleJourDu, libelleJourLong, libelleMinutes } from './temps';
+import { formaterDistance, formaterDuree, formaterHeure, libelleJourBref, libelleJourCourt, libelleJourDu, libelleJourLong, libelleMinutes } from './temps';
 
 describe('temps', () => {
   it('formate les heures et les durées', () => {
@@ -36,5 +36,12 @@ describe('texte', () => {
   it('normalise accents, casse et espaces', () => {
     expect(normaliser('  Molière ')).toBe('moliere');
     expect(normaliser('ÉDMOND')).toBe('edmond');
+  });
+
+  it('formate le jour abrégé et la distance', () => {
+    expect(libelleJourBref('2026-11-28')).toBe('sam. 28 nov.');
+    expect(formaterDistance(0.35)).toBe('350 m');
+    expect(formaterDistance(2.4)).toBe('2,4 km');
+    expect(formaterDistance(3)).toBe('3,0 km');
   });
 });

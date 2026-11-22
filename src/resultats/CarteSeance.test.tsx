@@ -7,7 +7,7 @@ import { DEUX_DUREES, resultatPour, type Cas } from './fixtures.test-utils';
 /** Le texte tel qu'il est rendu dans la carte (rendu serveur, sans navigateur). */
 function carte(cas: Cas): string {
   const { resultat, criteres } = resultatPour(cas);
-  return renderToStaticMarkup(<CarteSeance resultat={resultat} criteres={criteres} origineLibelle="République" />);
+  return renderToStaticMarkup(<CarteSeance resultat={resultat} criteres={criteres} origineLibelle="République" onOuvrir={() => undefined} />);
 }
 
 const SANS_TRAJET = 'Aucun trajet n’est estimé depuis République : l’heure d’arrivée ne peut pas être calculée.';
@@ -49,5 +49,16 @@ describe('carte « Trajet non estimé » : texte réellement affiché', () => {
     expect(carte({ ...REF, avecTrajet: true })).toContain(
       'Deux durées sont annoncées : 1 h 45 et 1 h 55. La séance peut finir entre 21h45 et 21h55. Votre limite est 21h50.',
     );
+  });
+});
+
+describe('carte : lien vers la fiche de cette séance', () => {
+  it('le titre est un lien vers /seances/:identifiant exact, étendu à la carte, avec l’heure dans son nom', () => {
+    const { resultat, criteres } = resultatPour({ durees: DEUX_DUREES, debutMinutes: 1200, limiteMinutes: 1320, avecTrajet: true });
+    const html = renderToStaticMarkup(<CarteSeance resultat={resultat} criteres={criteres} origineLibelle="République" onOuvrir={() => undefined} />);
+    expect(html).toContain(`href="/seances/x-2026-11-28-1200"`);
+    expect(html).toContain(`data-cle="x-2026-11-28-1200"`);
+    expect(html).toContain('séance de 20h00');
+    expect(html).toContain('after:absolute after:inset-0');
   });
 });

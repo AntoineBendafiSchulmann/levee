@@ -1,38 +1,21 @@
 import { Affiche } from '../accueil/Affiche';
-import type { GroupeSeance, StatutSeance } from '../domaine/evaluation';
 import { libelleGenre } from '../domaine/genres';
 import type { ResultatSeance } from '../domaine/resultats';
+import { identifiantSeance } from '../domaine/seance';
 import { formaterDuree, formaterHeure, libelleMinutes } from '../domaine/temps';
 import type { CriteresSortie } from '../domaine/types';
+import { cheminCible } from '../parcours/chemins';
 import { dureesDistinctes, explicationSeance } from './explication';
 import { FriseHoraire } from './FriseHoraire';
+import { LIBELLE_STATUT, POINT_GROUPE as POINT, TEXTE_GROUPE as TEXTE } from './statut';
 
 interface Props {
   readonly resultat: ResultatSeance;
   readonly criteres: CriteresSortie;
   readonly origineLibelle: string;
+  /** Ouvre la fiche de cette séance (clic simple ; un clic modifié laisse le navigateur suivre le lien). */
+  readonly onOuvrir: (identifiant: string) => void;
 }
-
-const LIBELLE_STATUT: Readonly<Record<StatutSeance, string>> = {
-  'a-temps': 'À temps',
-  'arrivee-serree': 'Arrivée serrée',
-  'fin-incertaine': 'Fin incertaine',
-  'duree-inconnue': 'Durée inconnue',
-  'trajet-inconnu': 'Trajet non estimé',
-  'arrivee-tardive': 'Commence avant votre arrivée',
-  'fin-depassee': 'Finit après votre limite',
-};
-
-const TEXTE: Readonly<Record<GroupeSeance, string>> = {
-  possible: 'text-ok',
-  'a-verifier': 'text-attention',
-  impossible: 'text-danger',
-};
-const POINT: Readonly<Record<GroupeSeance, string>> = {
-  possible: 'bg-ok',
-  'a-verifier': 'bg-attention',
-  impossible: 'bg-danger',
-};
 
 /** Sous-titre de la colonne « Sortie » : la fin est calculée, jamais annoncée. */
 function sousSortie(fin: { min: number; max: number } | null, limite: number): string {
@@ -72,11 +55,12 @@ function Colonne({ titre, valeur, lignes, classe }: { titre: string; valeur: str
  * Une carte = une séance. Trois colonnes distinguent ce qui est estimé (l'arrivée, d'après le trajet),
  * annoncé (le début et la durée) et calculé (la sortie).
  */
-export function CarteSeance({ resultat, criteres, origineLibelle }: Props) {
+export function CarteSeance({ resultat, criteres, origineLibelle, onOuvrir }: Props) {
   const { evaluation, spectacle, salle, seance } = resultat;
   const { statut, groupe, arriveeMinutes, margeArriveeMinutes: marge, trajetMinutes, fin } = evaluation;
   const durees = dureesDistinctes(resultat);
   const explication = explicationSeance(resultat, criteres, origineLibelle);
+  const identifiant = identifiantSeance(spectacle, seance);
 
   const classeArrivee = marge !== null && marge < 0 ? 'text-danger' : statut === 'arrivee-serree' ? 'text-attention' : '';
   const classeDebut = durees.length === 1 ? '' : 'text-attention';
@@ -91,7 +75,7 @@ export function CarteSeance({ resultat, criteres, origineLibelle }: Props) {
         : `annoncé · durées ${durees.map(formaterDuree).join(' ou ')}`;
 
   return (
-    <article className="flex flex-col gap-3.5 rounded-md border border-filet bg-surface p-3.5">
+    <article className="relative flex flex-col gap-3.5 rounded-md border border-filet bg-surface p-3.5 hover:bg-surface-survol">
       <div className="grid grid-cols-[64px_minmax(0,1fr)] gap-3.5">
         <div>
           <Affiche affiche={spectacle.affiche} titre={spectacle.titre} auteur={spectacle.auteur} salle={salle.nom} />
@@ -101,7 +85,26 @@ export function CarteSeance({ resultat, criteres, origineLibelle }: Props) {
             <span aria-hidden="true" className={`size-2 flex-none rounded-full ${POINT[groupe]}`} />
             {LIBELLE_STATUT[statut]}
           </p>
-          <h2 className="font-editorial text-[26px] leading-none font-normal text-pretty italic">{spectacle.titre}</h2>
+          <h2 className="font-editorial text-[26px] leading-none font-normal text-pretty italic">
+            <a
+              href={cheminCible({ type: 'seance', id: identifiant })}
+              data-cle={identifiant}
+              onClick={(evenement) => {
+                // Clic modifié (nouvel onglet, etc.) : on laisse le navigateur suivre le lien.
+                if (evenement.button !== 0 || evenement.metaKey || evenement.ctrlKey || evenement.shiftKey || evenement.altKey) {
+                  return;
+                }
+                evenement.preventDefault();
+                onOuvrir(identifiant);
+              }}
+              className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-corail"
+            >
+              {spectacle.titre}
+              <span className="sr-only">
+                , séance de {formaterHeure(seance.debutMinutes)}, {LIBELLE_STATUT[statut]}
+              </span>
+            </a>
+          </h2>
           <p className="text-xs font-semibold tracking-[0.1em] text-texte-doux uppercase">
             {spectacle.auteur} · {spectacle.genres.map(libelleGenre).join(', ')}
           </p>

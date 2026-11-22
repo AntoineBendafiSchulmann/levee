@@ -1,4 +1,5 @@
-import { evaluerSeance, type Evaluation } from './evaluation';
+import type { Evaluation } from './evaluation';
+import { evaluerPourCriteres, identifiantSeance, trouverSalle } from './seance';
 import { normaliser, pluriel } from './texte';
 import type { CriteresSortie, Salle, Seance, Spectacle } from './types';
 
@@ -35,6 +36,17 @@ export interface Resultats {
   readonly avantDepart: readonly SeanceAvantDepart[];
 }
 
+/** Le résultat d'une séance précise : la même évaluation que sur une carte de résultats, pour la fiche. */
+export function resultatDeSeance(spectacle: Spectacle, salle: Salle, seance: Seance, criteres: CriteresSortie): ResultatSeance {
+  return {
+    id: identifiantSeance(spectacle, seance),
+    spectacle,
+    salle,
+    seance,
+    evaluation: evaluerPourCriteres(spectacle, salle, seance, criteres),
+  };
+}
+
 function correspond(spectacle: Spectacle, criteres: CriteresSortie): boolean {
   const genreOk =
     criteres.genres.length === 0 || spectacle.genres.some((genre) => criteres.genres.includes(genre));
@@ -51,24 +63,14 @@ export function construireResultats(
   const avantDepart: SeanceAvantDepart[] = [];
 
   for (const spectacle of spectacles.filter((s) => correspond(s, criteres))) {
-    const salle = salles.find((s) => s.id === spectacle.salleId);
-    if (salle === undefined) {
-      throw new Error(`Salle inconnue « ${spectacle.salleId} » pour le spectacle « ${spectacle.id} ».`);
-    }
+    const salle = trouverSalle(salles, spectacle);
     for (const seance of spectacle.seances.filter((s) => s.jour === criteres.jour)) {
-      const id = `${spectacle.id}-${seance.jour}-${String(seance.debutMinutes)}`;
+      const id = identifiantSeance(spectacle, seance);
       if (seance.debutMinutes < criteres.departMinutes) {
         avantDepart.push({ id, titre: spectacle.titre, debutMinutes: seance.debutMinutes });
         continue;
       }
-      const evaluation = evaluerSeance({
-        debutMinutes: seance.debutMinutes,
-        durees: spectacle.durees,
-        trajet: salle.trajets[criteres.origine],
-        departMinutes: criteres.departMinutes,
-        limiteMinutes: criteres.limiteMinutes,
-      });
-      listees.push({ id, spectacle, salle, seance, evaluation });
+      listees.push(resultatDeSeance(spectacle, salle, seance, criteres));
     }
   }
 

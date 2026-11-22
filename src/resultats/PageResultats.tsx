@@ -9,6 +9,7 @@ import { libelleGenre } from '../domaine/genres';
 import { libelleBoutonVoir, libelleCompteurs, type Resultats } from '../domaine/resultats';
 import { formaterHeure, libelleJourCourt, libelleJourLong } from '../domaine/temps';
 import { pluriel } from '../domaine/texte';
+import { focaliserCle, ramenerEnVue } from '../parcours/focus';
 import type { Parcours } from '../parcours/useParcours';
 import { CarteSeance } from './CarteSeance';
 import { MOTIF_INCERTAIN, MOTIF_TRAJET } from './FriseHoraire';
@@ -30,7 +31,9 @@ export function PageResultats({ parcours, aujourdhui, options, resultats }: Prop
   const { criteres, lirePosition, memoriserPosition } = parcours;
   const defileur = useRef<HTMLElement>(null);
   const titre = useRef<HTMLHeadingElement>(null);
+  const bandeau = useRef<HTMLDivElement>(null);
   const focaliser = parcours.naviguee;
+  const { cleRetour } = parcours;
 
   // Au retour, la liste retrouve sa position de défilement.
   useLayoutEffect(() => {
@@ -39,12 +42,22 @@ export function PageResultats({ parcours, aujourdhui, options, resultats }: Prop
     }
   }, [lirePosition]);
 
-  // Après une navigation (lien, bouton, retour du navigateur), le focus passe au titre de la page.
+  // Après une navigation (lien, bouton, retour du navigateur), le focus passe au titre de la page ; au retour
+  // d'une fiche, il revient sur la carte d'où l'on est parti. La position restituée n'est corrigée que si ce lien
+  // est hors de la zone de lecture (par exemple après une actualisation, qui remet le défilement à zéro) ou
+  // sous le bandeau collant : un lien déjà visible ne bouge pas.
   useEffect(() => {
-    if (focaliser) {
-      titre.current?.focus({ preventScroll: true });
+    if (!focaliser) {
+      return;
     }
-  }, [focaliser]);
+    const carte = cleRetour === null ? null : focaliserCle(cleRetour);
+    if (carte === null) {
+      titre.current?.focus({ preventScroll: true });
+    } else if (defileur.current !== null) {
+      const bande = bandeau.current;
+      ramenerEnVue(carte, defileur.current, bande !== null && bande.offsetHeight > 0 ? bande.getBoundingClientRect().bottom : 0);
+    }
+  }, [focaliser, cleRetour]);
 
   const origine = options.origines.find((o) => o.id === criteres.origine)?.libelle ?? criteres.origine;
   const formulaire = (
@@ -80,7 +93,7 @@ export function PageResultats({ parcours, aujourdhui, options, resultats }: Prop
           }}
           className="min-h-0 min-w-0 flex-1 overflow-auto"
         >
-          <div className="sticky top-0 z-10 flex flex-col gap-2 border-b border-filet bg-fond px-4 py-2.5 tablette:px-6 bureau:hidden">
+          <div ref={bandeau} className="sticky top-0 z-10 flex flex-col gap-2 border-b border-filet bg-fond px-4 py-2.5 tablette:px-6 bureau:hidden">
             <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">
               <button
                 type="button"
@@ -169,7 +182,14 @@ export function PageResultats({ parcours, aujourdhui, options, resultats }: Prop
               <ul className="grid grid-cols-1 items-start gap-3 tablette:grid-cols-2">
                 {resultats.visibles.map((resultat) => (
                   <li key={resultat.id}>
-                    <CarteSeance resultat={resultat} criteres={criteres} origineLibelle={origine} />
+                    <CarteSeance
+                      resultat={resultat}
+                      criteres={criteres}
+                      origineLibelle={origine}
+                      onOuvrir={(identifiant) => {
+                        parcours.ouvrirFiche({ type: 'seance', id: identifiant }, 'resultats', identifiant);
+                      }}
+                    />
                   </li>
                 ))}
               </ul>

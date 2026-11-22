@@ -29,12 +29,18 @@ export interface CriteresSortie {
 /** Trajet estimé (et non calculé à partir d'une distance) d'un point de départ vers une salle. */
 export interface Trajet {
   readonly minutes: number;
+  /** Façon de s'y rendre, par exemple « Métro 9 puis 6 min à pied ». Absente : la fiche ne la mentionne pas. */
+  readonly description?: string;
+  /** Distance à vol d'oiseau, en kilomètres. Informative : l'évaluation n'utilise que `minutes`. */
+  readonly distanceKm?: number;
 }
 
 export interface Salle {
   readonly id: string;
   readonly nom: string;
   readonly quartier: string;
+  /** Adresse postale, sans la ville. */
+  readonly adresse: string;
   /** Un trajet par point de départ connu ; un point de départ absent ici n'a pas d'estimation. */
   readonly trajets: Readonly<Record<OrigineId, Trajet>>;
 }
@@ -85,6 +91,8 @@ export interface Spectacle {
   readonly id: string;
   readonly titre: string;
   readonly auteur: string;
+  /** Résumé en une ou deux phrases, affiché sur la fiche. */
+  readonly synopsis: string;
   readonly genres: readonly GenreId[];
   readonly salleId: string;
   /** Aucune durée annoncée : tableau vide. */

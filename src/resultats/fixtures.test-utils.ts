@@ -30,6 +30,7 @@ export function resultatPour(cas: Cas): { resultat: ResultatSeance; criteres: Cr
     id: 'salle-x',
     nom: 'Salle X',
     quartier: 'Paris 1er',
+    adresse: '1 rue de Test',
     trajets: cas.avecTrajet ? { republique: { minutes: 18 } } : {},
   };
   const spectacle: Spectacle = {

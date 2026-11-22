@@ -57,3 +57,15 @@ export function libelleJourCourt(jour: JourIso, aujourdhui: JourIso): string {
 export function libelleJourDu(jour: JourIso, aujourdhui: JourIso): string {
   return jour === aujourdhui ? 'ce soir' : formater(jour, { weekday: 'long' });
 }
+
+/** « sam. 28 nov. » : le jour en abrégé, avec le mois. */
+export function libelleJourBref(jour: JourIso): string {
+  return formater(jour, { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+/** 0,35 → « 350 m », 2,4 → « 2,4 km ». */
+export function formaterDistance(kilometres: number): string {
+  return kilometres < 1
+    ? `${String(Math.round(kilometres * 1000))} m`
+    : `${kilometres.toFixed(1).replace('.', ',')} km`;
+}

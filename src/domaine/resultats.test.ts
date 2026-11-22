@@ -170,7 +170,7 @@ describe('libellés des compteurs et du bouton', () => {
 });
 
 describe('données manquantes dans un résultat', () => {
-  const salleSansTrajet: Salle = { id: 'x', nom: 'Salle X', quartier: 'Paris 1er', trajets: {} };
+  const salleSansTrajet: Salle = { id: 'x', nom: 'Salle X', quartier: 'Paris 1er', adresse: '1 rue de Test', trajets: {} };
   const sansDuree: Spectacle = { ...(DEMO_SPECTACLES[0] as Spectacle), id: 'sans-duree', salleId: 'x', durees: [] };
 
   it('une salle sans trajet pour ce départ donne « trajet-inconnu », comptée à vérifier', () => {

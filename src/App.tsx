@@ -1,4 +1,5 @@
 import { PageAccueil } from './accueil/PageAccueil';
+import { PageFiche } from './fiche/PageFiche';
 import type { OptionsCriteres } from './criteres/FormulaireCriteres';
 import { construireResultats } from './domaine/resultats';
 import { joursDisponibles } from './domaine/programme';
@@ -23,8 +24,20 @@ const OPTIONS: OptionsCriteres = {
  * aux composants.
  */
 export function App() {
-  const parcours = useParcours(DEMO_CRITERES_INITIAUX);
+  const parcours = useParcours(DEMO_CRITERES_INITIAUX, OPTIONS);
   const resultats = construireResultats(DEMO_SPECTACLES, DEMO_SALLES, parcours.criteres);
+
+  if (parcours.ecran === 'fiche') {
+    return (
+      <PageFiche
+        parcours={parcours}
+        aujourdhui={DEMO_AUJOURDHUI}
+        spectacles={DEMO_SPECTACLES}
+        salles={DEMO_SALLES}
+        options={OPTIONS}
+      />
+    );
+  }
 
   return parcours.ecran === 'resultats' ? (
     <PageResultats parcours={parcours} aujourdhui={DEMO_AUJOURDHUI} options={OPTIONS} resultats={resultats} />

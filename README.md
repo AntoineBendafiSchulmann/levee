@@ -1,7 +1,7 @@
 # levee
 
 Une API ASP.NET Core et un client React + Vite en TypeScript strict, stylé avec Tailwind CSS.
-Le client propose le parcours accueil → critères → résultats avec des données de démonstration (lots 1 et 2).
+Le client propose le parcours accueil → critères → résultats → fiche d'une pièce avec des données de démonstration (lots 1 à 3).
 En développement, le navigateur ne parle qu'à Vite, qui relaie `/bff` vers ASP.NET Core.
 
 ```
@@ -16,8 +16,9 @@ server/Levee.Api/               API ASP.NET Core (BFF) appelée par le client
 src/                            Client React + Vite (index.html, package.json et configurations à la racine)
   accueil/                      Accueil : page, carrousel d'affiches, affiche, actions
   criteres/                     Formulaire de critères et feuille qui le contient
-  resultats/                    Page des résultats, carte d'une séance, frise horaire
-  parcours/                     État de navigation (écran, critères, positions de défilement)
+  resultats/                    Page des résultats, carte d'une séance (lien vers sa fiche), frise horaire
+  fiche/                        Fiche d'une pièce : séances par jour, verdict, détail du trajet et du calcul
+  parcours/                     Navigation (adresses, écran, critères, défilement, focus de retour)
   commun/                       Éléments partagés (en-tête)
   domaine/                      Types et fonctions pures : évaluation d'une séance, résultats, temps (+ tests)
   donnees-demo/                 DONNÉES FICTIVES de démonstration, importées par App.tsx seul
@@ -117,11 +118,26 @@ Dans le navigateur :
    tard à » 22 h 00, *Le Jeu de l’amour et du hasard* de 20 h 00 est « À temps » ; à 21 h 50 il devient
    « Fin incertaine » (fin entre 21 h 45 et 21 h 55). En avançant le départ à 16 h 00, ses deux
    représentations (16 h 30 et 20 h 00) apparaissent comme deux cartes distinctes.
-8. À 375 × 667, « Voir les séances » et « Préparer une autre sortie » sont visibles sans défilement,
-   y compris quand l'avis « Provisoire » de l'activation d'une affiche (fiche : lot suivant) est affiché.
-   Sous environ 650 px de hauteur, la page peut défiler quand cet avis apparaît.
+8. À 375 × 667, « Voir les séances » et « Préparer une autre sortie » sont visibles sans défilement.
+9. Fiche. Sur l'accueil, un premier geste à la souris ou au doigt sur une affiche voisine la centre ; le
+   geste suivant sur l'affiche centrée ouvre `/piece/:idSpectacle`. Au clavier, Entrée ouvre l'affiche
+   focalisée. La séance présélectionnée est la première qui convient à partir du départ, le jour choisi : c'est
+   aussi l'horaire de la légende de l'affiche. Sur `/seances`, chaque carte est un lien vers
+   `/seances/:idSeance` : avec départ à 16 h 00 le samedi 28 novembre, la carte de 20 h du *Jeu de l'amour
+   et du hasard* ouvre la séance de 20 h (limite 21 h 50 : « Fin incertaine »), pas celle de 16 h 30.
+10. Sur la fiche : les onglets de jour filtrent la liste, un clic sur un horaire le choisit et met l'adresse à
+    jour (`/seances/:idSeance`, sans nouvelle entrée d'historique), « Trajet et calcul horaire » déplie le
+    détail, « ← Résultats » ou « ← Accueil » revient à l'écran d'origine avec critères, défilement et focus (la
+    carte ou l'affiche d'origine) restitués. Le rechargement, l'ouverture directe et le retour du navigateur
+    affichent la séance de l'adresse ; une adresse inconnue affiche « Fiche introuvable ».
+11. Critères et rechargement. Les critères ne sont pas dans l'adresse : ils sont gardés dans le `sessionStorage`
+    de l'onglet. Actualiser la page conserve donc les critères (et le verdict) ; un onglet neuf ouvert sur la
+    même adresse affiche la même séance avec les critères de démonstration. Une valeur absente, illisible ou
+    refusée par le domaine (origine inconnue, heure hors bornes ou hors pas de 5 minutes, genre ou jour inconnu)
+    est ignorée ; un stockage inaccessible aussi.
 
 ## Hors périmètre à ce stade
 
-Authentification et droits d'accès, persistance en base, fiche séance, réservation, menu global,
+Authentification et droits d'accès, persistance en base, réservation simulée, confirmation et « Mes billets »
+(lot suivant), menu global,
 branchement des séances au BFF, service du build React par ASP.NET Core et publication.
