@@ -3,10 +3,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CibleFiche } from '../domaine/seance';
 import type { CriteresSortie } from '../domaine/types';
 import { ecrireCriteres, lireCriteres, stockageOnglet, type ContraintesCriteres } from './memoireCriteres';
-import { analyserChemin, cheminCible, cheminEcran, origineParDefaut, type Ecran, type OrigineFiche, type Route } from './chemins';
+import { analyserChemin, ancreDepuisAdresse, cheminCible, cheminEcran, origineParDefaut, type Ecran, type OrigineFiche, type Route } from './chemins';
 
 export type { Ecran, OrigineFiche } from './chemins';
-export type CleDefilement = 'affiches' | 'resultats';
+/** Défilement vertical mémorisé, par page. */
+export type CleDefilement = 'accueil' | 'resultats';
 
 /**
  * Ce que l'application range dans `history.state` quand elle ouvre une fiche : l'origine, et la clé de
@@ -73,7 +74,10 @@ export function useParcours(criteresInitiaux: CriteresSortie, contraintes: Contr
   const [feuilleOuverte, setFeuilleOuverte] = useState(false);
   /** Vrai après la première navigation de l'utilisateur : la page d'arrivée y place alors le focus. */
   const [naviguee, setNaviguee] = useState(false);
-  const positions = useRef<Record<CleDefilement, number>>({ affiches: 0, resultats: 0 });
+  const ancre = useRef<'selection' | null>(ancreDepuisAdresse(window.location.pathname, window.location.hash));
+  /** Pièce à l'affiche sur l'accueil, retenue par son identifiant : elle suit la pièce, pas sa position dans la liste. */
+  const afficheActive = useRef<string | null>(null);
+  const positions = useRef<Record<CleDefilement, number>>({ accueil: 0, resultats: 0 });
 
   const route: Route = analyserChemin(navigation.chemin);
 
@@ -151,8 +155,26 @@ export function useParcours(criteresInitiaux: CriteresSortie, contraintes: Contr
     aller('resultats');
   }, [aller]);
   const retournerAccueil = useCallback(() => {
+    // Depuis une autre page : l'accueil s'ouvre en haut (le retour arrière, lui, restitue la position).
+    positions.current.accueil = 0;
     aller('accueil');
   }, [aller]);
+  /** « Séances de la soirée » depuis une autre page : l'accueil s'ouvre sur la sélection de séances. */
+  const allerSelection = useCallback(() => {
+    ancre.current = 'selection';
+    aller('accueil');
+  }, [aller]);
+  /** Lit une seule fois l'ancre demandée par la navigation, puis l'oublie. */
+  const consommerAncre = useCallback((): 'selection' | null => {
+    const demandee = ancre.current;
+    ancre.current = null;
+    return demandee;
+  }, []);
+
+  const lireAfficheActive = useCallback(() => afficheActive.current, []);
+  const memoriserAfficheActive = useCallback((id: string) => {
+    afficheActive.current = id;
+  }, []);
 
   const lirePosition = useCallback((cle: CleDefilement) => positions.current[cle], []);
   const memoriserPosition = useCallback((cle: CleDefilement, valeur: number) => {
@@ -172,11 +194,15 @@ export function useParcours(criteresInitiaux: CriteresSortie, contraintes: Contr
     fermerFeuille,
     voirSeances,
     retournerAccueil,
+    allerSelection,
+    consommerAncre,
     ouvrirFiche,
     choisirSeance,
     retournerDeFiche,
     lirePosition,
     memoriserPosition,
+    lireAfficheActive,
+    memoriserAfficheActive,
   };
 }
 

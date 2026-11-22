@@ -1,7 +1,7 @@
 # levee
 
 Une API ASP.NET Core et un client React + Vite en TypeScript strict, stylé avec Tailwind CSS.
-Le client propose le parcours accueil → critères → résultats → fiche d'une pièce avec des données de démonstration (lots 1 à 3).
+Le client propose le parcours accueil → critères → résultats → fiche d'une pièce avec des données de démonstration (lots 1 à 4).
 En développement, le navigateur ne parle qu'à Vite, qui relaie `/bff` vers ASP.NET Core.
 
 ```
@@ -14,12 +14,12 @@ Navigateur ──► http://localhost:5173  (Vite)
 ```
 server/Levee.Api/               API ASP.NET Core (BFF) appelée par le client
 src/                            Client React + Vite (index.html, package.json et configurations à la racine)
-  accueil/                      Accueil : page, carrousel d'affiches, affiche, actions
+  accueil/                      Accueil : pièce à l'affiche et ses voisines, séances sous l'affiche, sélection de séances, actions
   criteres/                     Formulaire de critères et feuille qui le contient
   resultats/                    Page des résultats, carte d'une séance (lien vers sa fiche), frise horaire
   fiche/                        Fiche d'une pièce : séances par jour, verdict, détail du trajet et du calcul
   parcours/                     Navigation (adresses, écran, critères, défilement, focus de retour)
-  commun/                       Éléments partagés (en-tête)
+  commun/                       Éléments partagés (en-tête et navigation)
   domaine/                      Types et fonctions pures : évaluation d'une séance, résultats, temps (+ tests)
   donnees-demo/                 DONNÉES FICTIVES de démonstration, importées par App.tsx seul
   technique/                    Contrôle technique de l'API, servi sur /technique
@@ -107,30 +107,48 @@ Dans le navigateur :
 4. `http://localhost:5173/` affiche l'accueil : titre de l'onglet « levee », surtitre « Jeudi 26
    novembre · à l’affiche » (date de démonstration), trois critères, et le bouton « Voir les séances
    de ce soir » avec ses compteurs (« 4 possibles · 1 à vérifier · 1 impossible »).
-5. Le carrousel défile au doigt, avec les flèches (à partir de 700 px de large) et au clavier
-   (Tab, ← → Début Fin) ; l'affiche centrée est de face, les voisines inclinées et assombries.
-   Avec « réduire les animations » activé dans le système, les affiches restent à plat.
-6. « Préparer une autre sortie » (ou un critère) ouvre la feuille de critères : chaque changement
+5. Composition de l'accueil. Mobile : titre, affiche centrée entre deux voisines à demi visibles, flèches,
+   titre complet de la pièce, puis le bouton principal ; à 390 × 844 il est visible sans défiler, à 375 la page
+   défile. Tablette (≥ 700 px) : affiche à gauche, texte à droite. Bureau (≥ 1100 px) : zone centrale de 1100 px
+   (affiche de 360 px, texte à 52 px) et une affiche voisine de chaque côté. Ultra-wide (≥ 2200 px) : zone de
+   1560 px (affiche de 540 px, texte à 96 px) et deux voisines de chaque côté. Il n'y a jamais de défilement
+   horizontal. Les voisines n'existent que si la position le permet : la première affiche n'en a pas avant elle.
+6. Le carrousel s'arrête aux bords (flèches grisées en butée, pas de boucle) et une seule sélection commande le
+   titre, les séances, le compteur, les flèches et la fiche ouverte ; elle suit l'identifiant de la pièce : si les critères
+   changent la liste, la même pièce reste à l'affiche, et si elle disparaît la première pièce disponible la remplace.
+   Sous 1100 px : défilement natif avec accroche,
+   l'affiche suit le doigt, les voisines se redressent progressivement, l'accroche termine le geste, le défilement
+   vertical reste possible depuis l'affiche et un balayage n'ouvre pas de fiche. À partir de 1100 px : scène par
+   indice (voisines de chaque côté, balayage à la souris ou au doigt au-delà de 48 px). Partout : un premier clic
+   ou toucher sur une voisine la met à l'affiche, l'affiche active ouvre sa fiche ; au clavier, ← → Début Fin
+   changent d'affiche et Entrée ouvre directement la fiche de l'affiche focalisée. Franchir 1100 px, dans un sens ou
+   dans l'autre, garde la même pièce. Le changement s'anime sur la scène (et pour le texte) ; avec « réduire les
+   animations » activé, il est instantané et les affiches restent à plat.
+7. Sous l'affiche, les séances de la pièce ce jour-là (heure, sortie calculée, statut) ouvrent la représentation
+   exacte ; celle que la fiche présélectionne porte la mention « Séance proposée » et une bordure claire. Plus bas, « Les séances qui rentrent dans votre soirée » : au plus trois séances possibles tirées des
+   résultats, chacune ouvrant sa fiche ; « Voir tous les résultats » mène à `/seances` avec les critères courants ;
+   sans séance possible (« À temps »), un message le dit ; une séance « à vérifier », par exemple « Arrivée serrée », n'y figure pas mais reste sur `/seances`. L'en-tête : le logo et « À l'affiche » ramènent en haut de
+   l'accueil (ou à l'accueil depuis une autre page), « Séances de la soirée » (« Séances » sur mobile) mène à la
+   sélection, la date du jour choisi apparaît dès 700 px.
+8. « Préparer une autre sortie » (ou un critère) ouvre la feuille de critères : chaque changement
    s'applique tout de suite, Échap la ferme et le focus revient à l'élément qui l'a ouverte.
    « Voir N séances » ouvre les résultats (`/seances`) ; le retour du navigateur ramène à l'accueil
    avec les critères conservés. Une ouverture directe de `/seances` utilise les critères de démonstration.
-7. Parcours de référence : samedi 28 novembre, départ République à 18 h 30. Avec « Sortie au plus
+9. Parcours de référence : samedi 28 novembre, départ République à 18 h 30. Avec « Sortie au plus
    tard à » 22 h 00, *Le Jeu de l’amour et du hasard* de 20 h 00 est « À temps » ; à 21 h 50 il devient
    « Fin incertaine » (fin entre 21 h 45 et 21 h 55). En avançant le départ à 16 h 00, ses deux
    représentations (16 h 30 et 20 h 00) apparaissent comme deux cartes distinctes.
-8. À 375 × 667, « Voir les séances » et « Préparer une autre sortie » sont visibles sans défilement.
-9. Fiche. Sur l'accueil, un premier geste à la souris ou au doigt sur une affiche voisine la centre ; le
-   geste suivant sur l'affiche centrée ouvre `/piece/:idSpectacle`. Au clavier, Entrée ouvre l'affiche
+10. Fiche. Sur l'accueil, l'affiche active ouvre `/piece/:idSpectacle`. Au clavier, Entrée ouvre l'affiche
    focalisée. La séance présélectionnée est la première qui convient à partir du départ, le jour choisi : c'est
    aussi l'horaire de la légende de l'affiche. Sur `/seances`, chaque carte est un lien vers
    `/seances/:idSeance` : avec départ à 16 h 00 le samedi 28 novembre, la carte de 20 h du *Jeu de l'amour
    et du hasard* ouvre la séance de 20 h (limite 21 h 50 : « Fin incertaine »), pas celle de 16 h 30.
-10. Sur la fiche : les onglets de jour filtrent la liste, un clic sur un horaire le choisit et met l'adresse à
+11. Sur la fiche : les onglets de jour filtrent la liste, un clic sur un horaire le choisit et met l'adresse à
     jour (`/seances/:idSeance`, sans nouvelle entrée d'historique), « Trajet et calcul horaire » déplie le
     détail, « ← Résultats » ou « ← Accueil » revient à l'écran d'origine avec critères, défilement et focus (la
     carte ou l'affiche d'origine) restitués. Le rechargement, l'ouverture directe et le retour du navigateur
-    affichent la séance de l'adresse ; une adresse inconnue affiche « Fiche introuvable ».
-11. Critères et rechargement. Les critères ne sont pas dans l'adresse : ils sont gardés dans le `sessionStorage`
+    affichent la séance de l'adresse ; un identifiant de pièce ou de séance inconnu affiche « Fiche introuvable ».
+12. Critères et rechargement. Les critères ne sont pas dans l'adresse : ils sont gardés dans le `sessionStorage`
     de l'onglet. Actualiser la page conserve donc les critères (et le verdict) ; un onglet neuf ouvert sur la
     même adresse affiche la même séance avec les critères de démonstration. Une valeur absente, illisible ou
     refusée par le domaine (origine inconnue, heure hors bornes ou hors pas de 5 minutes, genre ou jour inconnu)

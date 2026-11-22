@@ -2,7 +2,7 @@ import { useId, useState } from 'react';
 
 import { SEUIL_ARRIVEE_SERREE_MINUTES } from '../domaine/evaluation';
 import type { ResultatSeance } from '../domaine/resultats';
-import { formaterDistance, formaterDuree, formaterHeure } from '../domaine/temps';
+import { formaterDistance, formaterDuree, formaterHeure, formaterPlageHeures } from '../domaine/temps';
 import type { CriteresSortie } from '../domaine/types';
 
 interface Props {
@@ -32,10 +32,6 @@ const NATURE: Readonly<Record<Nature, string>> = {
   Calculé: 'border-solid border-texte bg-texte text-fond',
   Annoncé: 'border-solid border-texte',
 };
-
-function plageHeures(fin: { min: number; max: number }): string {
-  return fin.min === fin.max ? formaterHeure(fin.min) : `${formaterHeure(fin.min)}–${formaterHeure(fin.max)}`;
-}
 
 function lignes({ evaluation, spectacle, seance }: ResultatSeance, criteres: CriteresSortie, origineLibelle: string, description: string | undefined): Ligne[] {
   const { statut, trajetMinutes, arriveeMinutes, margeArriveeMinutes: marge, fin } = evaluation;
@@ -79,7 +75,7 @@ function lignes({ evaluation, spectacle, seance }: ResultatSeance, criteres: Cri
       ? { libelle: 'Fin calculée', valeur: '?', note: 'Impossible sans durée', fort: true, classe: COULEUR.attention }
       : {
           libelle: 'Fin calculée',
-          valeur: plageHeures(fin),
+          valeur: formaterPlageHeures(fin),
           nature: 'Calculé',
           note: fin.min === fin.max ? 'Début + durée annoncée' : 'Début + durée la plus courte / la plus longue',
           fort: true,

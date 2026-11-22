@@ -1,5 +1,5 @@
 import type { Evaluation } from '../domaine/evaluation';
-import { formaterHeure, libelleJourCourt } from '../domaine/temps';
+import { formaterHeure, formaterPlageHeures, libelleJourCourt } from '../domaine/temps';
 import type { JourIso, Seance } from '../domaine/types';
 import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../resultats/statut';
 
@@ -31,7 +31,7 @@ function ligneSortie({ fin }: Evaluation): string {
   if (fin === null) {
     return 'Sortie non calculable · durée inconnue';
   }
-  return `Sortie calculée ${fin.min === fin.max ? formaterHeure(fin.min) : `${formaterHeure(fin.min)}–${formaterHeure(fin.max)}`}`;
+  return `Sortie calculée ${formaterPlageHeures(fin)}`;
 }
 
 /** Onglets de jour puis séances de ce jour. Un onglet filtre la liste ; seul un clic sur un horaire change la séance choisie. */

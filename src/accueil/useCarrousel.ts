@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent } from 'react';
+import { useCallback, useRef, useState, useSyncExternalStore, type KeyboardEvent, type PointerEvent } from 'react';
 
 const REQUETE_MOUVEMENT_REDUIT = '(prefers-reduced-motion: reduce)';
 
@@ -19,196 +19,230 @@ export function useMouvementReduit(): boolean {
   );
 }
 
-function borner(valeur: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, valeur));
+const REQUETE_BUREAU = '(min-width: 1100px)';
+
+function abonnerBureau(notifier: () => void): () => void {
+  const requete = window.matchMedia(REQUETE_BUREAU);
+  requete.addEventListener('change', notifier);
+  return () => {
+    requete.removeEventListener('change', notifier);
+  };
 }
 
-/** Marge de tolérance (px) sur la position de défilement : les positions sont fractionnaires selon le zoom. */
-const TOLERANCE_PX = 2;
+/**
+ * Vrai à partir du seuil « bureau » (1100 px, le même que les classes `bureau:`) : la scène à indice, avec ses
+ * voisines de part et d'autre. En dessous, le défilement natif avec accroche. Suit un redimensionnement.
+ */
+export function useBureau(): boolean {
+  return useSyncExternalStore(
+    abonnerBureau,
+    () => window.matchMedia(REQUETE_BUREAU).matches,
+    () => false,
+  );
+}
+
+/** Ramène un indice dans `[0, nombre - 1]` (0 quand il n'y a aucune diapositive). */
+export function borner(indice: number, nombre: number): number {
+  return Math.max(0, Math.min(nombre - 1, indice));
+}
+
+/**
+ * Sélection effective d'après la liste courante des pièces : la pièce choisie si elle y figure (même à une autre
+ * position qu'avant), sinon la première pièce disponible (ordre de la liste) ; aucune si la liste est vide.
+ */
+export function resoudreSelection(ids: readonly string[], choisie: string | null): { id: string | null; indice: number } {
+  const position = choisie === null ? -1 : ids.indexOf(choisie);
+  const indice = Math.max(0, position);
+  return { id: ids[indice] ?? null, indice };
+}
 
 export interface EtatFleches {
   readonly peutReculer: boolean;
   readonly peutAvancer: boolean;
 }
 
+/** Les flèches s'arrêtent aux bords : pas de défilement circulaire. Une seule affiche : aucun déplacement possible. */
+export function etatFleches(indice: number, nombre: number): EtatFleches {
+  return { peutReculer: indice > 0, peutAvancer: indice < nombre - 1 };
+}
+
 /**
- * Déplacements réellement possibles d'après la position de défilement. Les marges des extrémités centrent la
- * première et la dernière affiche : le premier arrêt est à 0, le dernier à `scrollWidth - clientWidth`. Si tout
- * tient dans le défileur (rien à défiler), aucun déplacement n'est possible.
+ * Affiches voisines de l'affiche active, dans l'ordre d'affichage (de gauche à droite), limitées aux bords :
+ * la première affiche n'a pas de voisine avant elle, la dernière pas de voisine après.
  */
-export function etatFleches(scrollLeft: number, scrollWidth: number, clientWidth: number): EtatFleches {
-  const maximum = scrollWidth - clientWidth;
-  if (maximum <= TOLERANCE_PX) {
-    return { peutReculer: false, peutAvancer: false };
+export function voisins(indice: number, nombre: number, portee: number): { avant: number[]; apres: number[] } {
+  const avant: number[] = [];
+  const apres: number[] = [];
+  for (let distance = portee; distance >= 1; distance -= 1) {
+    if (indice - distance >= 0) {
+      avant.push(indice - distance);
+    }
   }
-  return { peutReculer: scrollLeft > TOLERANCE_PX, peutAvancer: scrollLeft < maximum - TOLERANCE_PX };
-}
-
-/** Vrai si la diapositive est entièrement dans la partie visible du défileur (ni hors de vue ni rognée). */
-export function estEntierementVisible(debut: number, largeur: number, scrollLeft: number, clientWidth: number): boolean {
-  return debut - scrollLeft >= -TOLERANCE_PX && debut + largeur - scrollLeft <= clientWidth + TOLERANCE_PX;
+  for (let distance = 1; distance <= portee; distance += 1) {
+    if (indice + distance <= nombre - 1) {
+      apres.push(indice + distance);
+    }
+  }
+  return { avant, apres };
 }
 
 /**
- * Logique du carrousel d'affiches : défilement natif avec accroche (scroll-snap), profondeur pilotée
- * par la position de défilement, flèches et clavier. Chaque diapositive est un élément
- * `[data-diapo]` (focusable) qui contient un élément `[data-profondeur]` à incliner.
- *
- * @param nombre Nombre de diapositives : relance le calcul de profondeur quand il change.
+ * Affiche la plus proche du centre d'après le défilement natif : chaque affiche est centrée à
+ * `indice × pas` (les marges des extrémités centrent la première et la dernière). Sans pas mesurable : 0.
  */
-export function useCarrousel(nombre: number) {
+export function indiceDepuisDefilement(defilement: number, pas: number, nombre: number): number {
+  return pas <= 0 ? 0 : borner(Math.round(defilement / pas), nombre);
+}
+
+/** Indice visé par une touche de navigation (← → Début Fin), ou `null` pour toute autre touche. */
+export function indiceApresTouche(touche: string, indice: number, nombre: number): number | null {
+  switch (touche) {
+    case 'ArrowLeft':
+      return borner(indice - 1, nombre);
+    case 'ArrowRight':
+      return borner(indice + 1, nombre);
+    case 'Home':
+      return 0;
+    case 'End':
+      return Math.max(0, nombre - 1);
+    default:
+      return null;
+  }
+}
+
+/** Seuil, en pixels, au-delà duquel un geste horizontal est un balayage et non un toucher. */
+export const SEUIL_BALAYAGE_PX = 48;
+
+/** Glisser vers la gauche (déplacement négatif) avance d'une affiche, vers la droite recule. */
+export function sensBalayage(deplacement: number): -1 | 0 | 1 {
+  if (Math.abs(deplacement) <= SEUIL_BALAYAGE_PX) {
+    return 0;
+  }
+  return deplacement < 0 ? 1 : -1;
+}
+
+interface Etat {
+  /** Pièce choisie : l'indice se déduit de la liste courante, il ne se mémorise pas. */
+  readonly id: string | null;
+  /** Sens du dernier déplacement, pour orienter l'animation d'arrivée. */
+  readonly sens: 1 | -1;
+}
+
+/**
+ * Logique du carrousel d'affiches : une pièce active (identifiée par son `id`, l'indice s'en déduit de la liste
+ * courante), flèches, clavier et balayage. Les déplacements s'arrêtent aux bords. `lireIdInitial` n'est lu
+ * qu'au montage. Si la pièce choisie disparaît de la liste, la première pièce disponible la remplace.
+ */
+export function useCarrousel(ids: readonly string[], lireIdInitial: () => string | null) {
   const reduire = useMouvementReduit();
-  const defileurRef = useRef<HTMLDivElement>(null);
-  const [fleches, setFleches] = useState<EtatFleches>({ peutReculer: false, peutAvancer: false });
+  const [etat, setEtat] = useState<Etat>(() => ({ id: resoudreSelection(ids, lireIdInitial()).id, sens: 1 }));
+  const { id: idActif, indice } = resoudreSelection(ids, etat.id);
+  if (idActif !== null && idActif !== etat.id) {
+    // La pièce choisie n'est plus dans la liste : la première pièce disponible devient la sélection.
+    setEtat({ id: idActif, sens: 1 });
+  }
+  const nombre = ids.length;
+  const departBalayage = useRef<number | null>(null);
+  const aBalayeRef = useRef(false);
+  /** Vrai juste après un balayage : le clic qui le suit ne doit ni ouvrir ni recentrer. */
+  const aBalaye = useCallback(() => aBalayeRef.current, []);
+  /** Vrai quand le déplacement vient du clavier : le focus suit alors l'affiche active. */
+  const focusSuitRef = useRef(false);
+  /** Vrai quand le changement d'affiche est voulu (flèche, clavier, miniature, clic) : le défilement natif doit alors suivre. */
+  const programmeRef = useRef(false);
 
-  const diapos = useCallback((): HTMLElement[] => {
-    const defileur = defileurRef.current;
-    return defileur === null ? [] : Array.from(defileur.querySelectorAll<HTMLElement>('[data-diapo]'));
-  }, []);
-
-  /** Une affiche latérale se redresse, s'éclaire et grandit à mesure qu'elle approche du centre. */
-  const appliquerProfondeur = useCallback(() => {
-    const defileur = defileurRef.current;
-    if (defileur === null) {
-      return;
-    }
-    const milieu = defileur.scrollLeft + defileur.clientWidth / 2;
-    for (const diapo of diapos()) {
-      const cible = diapo.querySelector<HTMLElement>('[data-profondeur]');
-      if (cible === null) {
-        continue;
-      }
-      if (reduire) {
-        cible.style.transform = '';
-        cible.style.filter = '';
-        continue;
-      }
-      const ecart = borner((diapo.offsetLeft + diapo.offsetWidth / 2 - milieu) / diapo.offsetWidth, -2, 2);
-      const distance = Math.min(Math.abs(ecart), 1.5);
-      cible.style.transform = `perspective(900px) rotateY(${(-ecart * 16).toFixed(2)}deg) scale(${(1 - distance * 0.1).toFixed(3)})`;
-      cible.style.filter = `brightness(${(1 - Math.min(distance, 1) * 0.35).toFixed(3)})`;
-    }
-  }, [diapos, reduire]);
-
-  /** Met à jour l'état des flèches d'après le défilement réel (position, taille, nombre d'affiches). */
-  const actualiserFleches = useCallback(() => {
-    const defileur = defileurRef.current;
-    if (defileur === null) {
-      return;
-    }
-    const etat = etatFleches(defileur.scrollLeft, defileur.scrollWidth, defileur.clientWidth);
-    setFleches((precedent) =>
-      precedent.peutReculer === etat.peutReculer && precedent.peutAvancer === etat.peutAvancer ? precedent : etat,
-    );
-  }, []);
-
-  useEffect(() => {
-    const defileur = defileurRef.current;
-    if (defileur === null) {
-      return;
-    }
-    let image = 0;
-    const planifier = () => {
-      if (image !== 0) {
+  const changer = useCallback(
+    (cible: number) => {
+      const id = ids[borner(cible, ids.length)];
+      if (id === undefined) {
         return;
       }
-      image = requestAnimationFrame(() => {
-        image = 0;
-        appliquerProfondeur();
-        actualiserFleches();
-      });
-    };
-    appliquerProfondeur();
-    planifier();
-    defileur.addEventListener('scroll', planifier, { passive: true });
-    const observateur = new ResizeObserver(planifier);
-    observateur.observe(defileur);
-    return () => {
-      defileur.removeEventListener('scroll', planifier);
-      observateur.disconnect();
-      cancelAnimationFrame(image);
-    };
-  }, [appliquerProfondeur, actualiserFleches, nombre]);
+      setEtat((precedent) =>
+        precedent.id === id ? precedent : { id, sens: ids.indexOf(id) > ids.indexOf(precedent.id ?? id) ? 1 : -1 },
+      );
+    },
+    [ids],
+  );
 
-  const comportement: ScrollBehavior = reduire ? 'auto' : 'smooth';
+  const allerA = useCallback(
+    (cible: number) => {
+      if (borner(cible, nombre) !== indice) {
+        programmeRef.current = true;
+      }
+      changer(cible);
+    },
+    [changer, indice, nombre],
+  );
 
-  /**
-   * Flèches : avance d'une affiche (largeur d'une diapositive plus l'espace entre deux). Sans effet vers un bord
-   * déjà atteint : la disponibilité est relue sur le défileur, pas sur l'état affiché.
-   */
-  const defiler = useCallback(
+  /** Le défilement natif a amené une autre affiche au centre : la sélection suit, sans relancer de défilement. */
+  const suivreDefilement = changer;
+
+  const pas = useCallback(
     (sens: -1 | 1) => {
-      const defileur = defileurRef.current;
-      const [premiere, seconde] = diapos();
-      if (defileur === null || premiere === undefined) {
-        return;
-      }
-      const possible = etatFleches(defileur.scrollLeft, defileur.scrollWidth, defileur.clientWidth);
-      if (sens === -1 ? !possible.peutReculer : !possible.peutAvancer) {
-        return;
-      }
-      const pas = seconde === undefined ? premiere.offsetWidth : seconde.offsetLeft - premiere.offsetLeft;
-      defileur.scrollBy({ left: sens * pas, behavior: comportement });
+      allerA(indice + sens);
     },
-    [diapos, comportement],
+    [allerA, indice],
   );
 
-  const centrer = useCallback(
-    (diapo: HTMLElement) => {
-      diapo.scrollIntoView({ inline: 'center', block: 'nearest', behavior: comportement });
-    },
-    [comportement],
-  );
-
-  /** Au retour d'une fiche : ramène l'affiche d'origine au centre seulement si elle est hors de vue ou rognée. */
-  const ramenerEnVue = useCallback(
-    (diapo: HTMLElement) => {
-      const defileur = defileurRef.current;
-      if (defileur !== null && !estEntierementVisible(diapo.offsetLeft, diapo.offsetWidth, defileur.scrollLeft, defileur.clientWidth)) {
-        centrer(diapo);
-      }
-    },
-    [centrer],
-  );
-
-  const estCentree = useCallback((diapo: HTMLElement): boolean => {
-    const defileur = defileurRef.current;
-    if (defileur === null) {
-      return false;
-    }
-    const milieu = defileur.scrollLeft + defileur.clientWidth / 2;
-    return Math.abs(diapo.offsetLeft + diapo.offsetWidth / 2 - milieu) < 4;
-  }, []);
-
-  /** ← → Début Fin : déplacent le focus sur une autre affiche et la centrent, focus toujours visible. */
   const surTouche = useCallback(
     (evenement: KeyboardEvent<HTMLElement>) => {
-      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(evenement.key)) {
+      const cible = evenement.target;
+      if (cible instanceof HTMLInputElement || cible instanceof HTMLSelectElement || cible instanceof HTMLTextAreaElement) {
         return;
       }
-      const liste = diapos();
-      const courante =
-        evenement.target instanceof Element ? evenement.target.closest<HTMLElement>('[data-diapo]') : null;
-      const index = courante === null ? -1 : liste.indexOf(courante);
-      if (index === -1) {
-        return;
-      }
-      const suivant = {
-        ArrowLeft: Math.max(0, index - 1),
-        ArrowRight: Math.min(liste.length - 1, index + 1),
-        Home: 0,
-        End: liste.length - 1,
-      }[evenement.key];
-      const cible = suivant === undefined ? undefined : liste[suivant];
-      if (cible === undefined) {
+      const visee = indiceApresTouche(evenement.key, indice, nombre);
+      if (visee === null) {
         return;
       }
       evenement.preventDefault();
-      cible.focus({ preventScroll: true });
-      centrer(cible);
+      // Une commande sans effet (butée) ne doit pas programmer un transfert de focus pour l'action suivante.
+      if (visee !== indice) {
+        focusSuitRef.current = true;
+        allerA(visee);
+      }
     },
-    [diapos, centrer],
+    [allerA, indice, nombre],
   );
 
-  return { defileurRef, defiler, surTouche, centrer, estCentree, ramenerEnVue, ...fleches };
+  const surPression = useCallback((evenement: PointerEvent<HTMLElement>) => {
+    departBalayage.current = evenement.clientX;
+    aBalayeRef.current = false;
+  }, []);
+
+  const surRelachement = useCallback(
+    (evenement: PointerEvent<HTMLElement>) => {
+      const depart = departBalayage.current;
+      departBalayage.current = null;
+      if (depart === null) {
+        return;
+      }
+      const sens = sensBalayage(evenement.clientX - depart);
+      if (sens !== 0) {
+        // Le clic qui suit le geste ne doit ni ouvrir ni recentrer.
+        aBalayeRef.current = true;
+        setTimeout(() => {
+          aBalayeRef.current = false;
+        }, 60);
+        pas(sens);
+      }
+    },
+    [pas],
+  );
+
+  return {
+    indice,
+    idActif,
+    sens: etat.sens,
+    reduire,
+    allerA,
+    suivreDefilement,
+    programmeRef,
+    pas,
+    surTouche,
+    surPression,
+    surRelachement,
+    aBalaye,
+    focusSuitRef,
+    ...etatFleches(indice, nombre),
+  };
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { normaliser, pluriel } from './texte';
-import { formaterDistance, formaterDuree, formaterHeure, libelleJourBref, libelleJourCourt, libelleJourDu, libelleJourLong, libelleMinutes } from './temps';
+import { dureesDistinctes, formaterDistance, formaterDuree, formaterPlageHeures, formaterHeure, libelleJourBref, libelleJourCourt, libelleJourDu, libelleJourLong, libelleMinutes } from './temps';
 
 describe('temps', () => {
   it('formate les heures et les durées', () => {
@@ -43,5 +43,23 @@ describe('texte', () => {
     expect(formaterDistance(0.35)).toBe('350 m');
     expect(formaterDistance(2.4)).toBe('2,4 km');
     expect(formaterDistance(3)).toBe('3,0 km');
+  });
+});
+
+describe('plage de fin et durées distinctes', () => {
+  it('fin certaine : une heure ; deux durées annoncées : une plage', () => {
+    expect(formaterPlageHeures({ min: 1310, max: 1310 })).toBe('21h50');
+    expect(formaterPlageHeures({ min: 1305, max: 1315 })).toBe('21h45–21h55');
+  });
+
+  it('durées distinctes : sans doublon, de la plus courte à la plus longue, vide si aucune n’est annoncée', () => {
+    expect(dureesDistinctes([])).toEqual([]);
+    expect(
+      dureesDistinctes([
+        { minutes: 115, source: 'Billetterie partenaire' },
+        { minutes: 105, source: 'Site du théâtre' },
+        { minutes: 115, source: 'Autre source' },
+      ]),
+    ).toEqual([105, 115]);
   });
 });

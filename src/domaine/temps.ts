@@ -1,4 +1,4 @@
-import type { JourIso } from './types';
+import type { Duree, JourIso } from './types';
 
 /** 1320 → « 22h00 ». */
 export function formaterHeure(minutes: number): string {
@@ -68,4 +68,14 @@ export function formaterDistance(kilometres: number): string {
   return kilometres < 1
     ? `${String(Math.round(kilometres * 1000))} m`
     : `${kilometres.toFixed(1).replace('.', ',')} km`;
+}
+
+/** « 21h50 » pour une fin certaine, « 21h45–21h55 » pour une plage entre deux durées annoncées. */
+export function formaterPlageHeures(fin: { readonly min: number; readonly max: number }): string {
+  return fin.min === fin.max ? formaterHeure(fin.min) : `${formaterHeure(fin.min)}–${formaterHeure(fin.max)}`;
+}
+
+/** Durées annoncées distinctes, en minutes, de la plus courte à la plus longue (sans doublon ; vide si aucune n'est annoncée). */
+export function dureesDistinctes(durees: readonly Duree[]): number[] {
+  return [...new Set(durees.map((duree) => duree.minutes))].sort((a, b) => a - b);
 }

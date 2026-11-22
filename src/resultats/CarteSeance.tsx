@@ -1,11 +1,12 @@
 import { Affiche } from '../accueil/Affiche';
+import { surClicSimple } from '../commun/lien';
 import { libelleGenre } from '../domaine/genres';
 import type { ResultatSeance } from '../domaine/resultats';
 import { identifiantSeance } from '../domaine/seance';
-import { formaterDuree, formaterHeure, libelleMinutes } from '../domaine/temps';
+import { dureesDistinctes, formaterDuree, formaterHeure, formaterPlageHeures, libelleMinutes } from '../domaine/temps';
 import type { CriteresSortie } from '../domaine/types';
 import { cheminCible } from '../parcours/chemins';
-import { dureesDistinctes, explicationSeance } from './explication';
+import { explicationSeance } from './explication';
 import { FriseHoraire } from './FriseHoraire';
 import { LIBELLE_STATUT, POINT_GROUPE as POINT, TEXTE_GROUPE as TEXTE } from './statut';
 
@@ -58,7 +59,7 @@ function Colonne({ titre, valeur, lignes, classe }: { titre: string; valeur: str
 export function CarteSeance({ resultat, criteres, origineLibelle, onOuvrir }: Props) {
   const { evaluation, spectacle, salle, seance } = resultat;
   const { statut, groupe, arriveeMinutes, margeArriveeMinutes: marge, trajetMinutes, fin } = evaluation;
-  const durees = dureesDistinctes(resultat);
+  const durees = dureesDistinctes(spectacle.durees);
   const explication = explicationSeance(resultat, criteres, origineLibelle);
   const identifiant = identifiantSeance(spectacle, seance);
 
@@ -89,14 +90,9 @@ export function CarteSeance({ resultat, criteres, origineLibelle, onOuvrir }: Pr
             <a
               href={cheminCible({ type: 'seance', id: identifiant })}
               data-cle={identifiant}
-              onClick={(evenement) => {
-                // Clic modifié (nouvel onglet, etc.) : on laisse le navigateur suivre le lien.
-                if (evenement.button !== 0 || evenement.metaKey || evenement.ctrlKey || evenement.shiftKey || evenement.altKey) {
-                  return;
-                }
-                evenement.preventDefault();
+              onClick={surClicSimple(() => {
                 onOuvrir(identifiant);
-              }}
+              })}
               className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-corail"
             >
               {spectacle.titre}
@@ -127,9 +123,7 @@ export function CarteSeance({ resultat, criteres, origineLibelle, onOuvrir }: Pr
         <Colonne titre="Début" valeur={formaterHeure(seance.debutMinutes)} lignes={[ligneDuree]} classe={classeDebut} />
         <Colonne
           titre="Sortie"
-          valeur={
-            fin === null ? '?' : fin.min === fin.max ? formaterHeure(fin.min) : `${formaterHeure(fin.min)}–${formaterHeure(fin.max)}`
-          }
+          valeur={fin === null ? '?' : formaterPlageHeures(fin)}
           lignes={[sousSortie(fin, criteres.limiteMinutes)]}
           classe={classeSortie}
         />

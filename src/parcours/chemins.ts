@@ -55,3 +55,15 @@ export function cheminEcran(ecran: Exclude<Ecran, 'fiche'>): string {
 export function origineParDefaut(route: Route): OrigineFiche {
   return route.cible?.type === 'seance' ? 'resultats' : 'accueil';
 }
+
+/** Identifiant (et ancre d'adresse) de la sélection de séances sous l'accueil : `/#seances-du-soir`. */
+export const ID_SELECTION = 'seances-du-soir';
+
+/**
+ * Ancre demandée par l'adresse à l'ouverture : `/#seances-du-soir` (lien de l'en-tête ouvert dans un nouvel
+ * onglet, ou page rechargée) mène à la sélection. Sans cette lecture, le navigateur ne défilerait pas : la
+ * sélection est dans le conteneur de défilement de la page, rendu après le chargement.
+ */
+export function ancreDepuisAdresse(chemin: string, hash: string): 'selection' | null {
+  return analyserChemin(chemin).ecran === 'accueil' && hash === `#${ID_SELECTION}` ? 'selection' : null;
+}

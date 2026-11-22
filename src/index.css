@@ -25,10 +25,11 @@
   --font-sans: 'Bricolage Grotesque Variable', system-ui, sans-serif;
   --font-editorial: 'Instrument Serif', serif;
 
-  /* Seuils de la maquette : mobile < 700 px, tablette < 1100 px, bureau au-delà. */
+  /* Seuils de la maquette : mobile < 700 px, tablette < 1100 px, bureau < 2200 px, ultra-wide au-delà. */
   --breakpoint-*: initial;
   --breakpoint-tablette: 700px;
   --breakpoint-bureau: 1100px;
+  --breakpoint-ultra: 2200px;
 }
 
 @layer base {

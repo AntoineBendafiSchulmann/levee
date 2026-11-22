@@ -7,7 +7,7 @@ import { libelleGenre } from '../domaine/genres';
 import { joursDisponibles } from '../domaine/programme';
 import { resultatDeSeance } from '../domaine/resultats';
 import { identifiantSeance, resoudreFiche } from '../domaine/seance';
-import { formaterDuree, formaterHeure, libelleJourBref } from '../domaine/temps';
+import { formaterDuree, formaterHeure, libelleJourBref, libelleJourLong } from '../domaine/temps';
 import type { CriteresSortie, JourIso, Salle, Spectacle } from '../domaine/types';
 import type { Parcours } from '../parcours/useParcours';
 import { verdictSeance } from '../resultats/explication';
@@ -48,7 +48,7 @@ export function PageFiche({ parcours, aujourdhui, spectacles, salles, options }:
 
   return (
     <div className="flex h-dvh flex-col">
-      <EnTete onAccueil={parcours.retournerAccueil} />
+      <EnTete ecran="fiche" date={libelleJourLong(criteres.jour)} onAccueil={parcours.retournerAccueil} onSeances={parcours.allerSelection} />
       {fiche === undefined ? (
         <FicheIntrouvable parcours={parcours} />
       ) : (

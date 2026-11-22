@@ -75,7 +75,7 @@ export function PageResultats({ parcours, aujourdhui, options, resultats }: Prop
 
   return (
     <div className="flex h-dvh flex-col">
-      <EnTete onAccueil={parcours.retournerAccueil} />
+      <EnTete ecran="resultats" date={libelleJourLong(criteres.jour)} onAccueil={parcours.retournerAccueil} onSeances={parcours.allerSelection} />
 
       <div className="flex min-h-0 flex-1 bureau:grid bureau:grid-cols-[372px_minmax(0,1fr)]">
         <aside

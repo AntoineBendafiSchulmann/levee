@@ -1,11 +1,6 @@
 import type { ResultatSeance } from '../domaine/resultats';
-import { formaterDuree, formaterHeure, libelleMinutes } from '../domaine/temps';
+import { dureesDistinctes, formaterDuree, formaterHeure, libelleMinutes } from '../domaine/temps';
 import type { CriteresSortie } from '../domaine/types';
-
-/** Durées annoncées distinctes, de la plus courte à la plus longue. */
-export function dureesDistinctes(resultat: ResultatSeance): number[] {
-  return [...new Set(resultat.spectacle.durees.map((d) => d.minutes))].sort((a, b) => a - b);
-}
 
 /** « a », « a et b », « a, b et c ». */
 function enumerer(elements: readonly string[]): string {
@@ -21,7 +16,7 @@ function phraseFinIncertaine(resultat: ResultatSeance, limite: string): string |
   if (fin === null) {
     return null;
   }
-  const durees = dureesDistinctes(resultat);
+  const durees = dureesDistinctes(resultat.spectacle.durees);
   const annonce = durees.length === 2 ? 'Deux durées sont annoncées' : `${String(durees.length)} durées sont annoncées`;
   return `${annonce} : ${enumerer(durees.map(formaterDuree))}. La séance peut finir entre ${formaterHeure(fin.min)} et ${formaterHeure(fin.max)}. Votre limite est ${limite}.`;
 }
@@ -76,6 +71,6 @@ export function verdictSeance(resultat: ResultatSeance, criteres: CriteresSortie
   if (statut !== 'a-temps' || marge === null || fin === null) {
     return explicationSeance(resultat, criteres, origineLibelle) ?? '';
   }
-  const memeAvecLaPlusLongue = dureesDistinctes(resultat).length > 1 ? ' même avec la durée la plus longue' : '';
+  const memeAvecLaPlusLongue = dureesDistinctes(resultat.spectacle.durees).length > 1 ? ' même avec la durée la plus longue' : '';
   return `Arrivée estimée ${libelleMinutes(marge)} avant le début, sortie ${libelleMinutes(criteres.limiteMinutes - fin.max)} avant votre limite${memeAvecLaPlusLongue}.`;
 }
