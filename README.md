@@ -1,6 +1,7 @@
 # levee
 
-Socle technique : une API ASP.NET Core et un client React + Vite en TypeScript strict.
+Une API ASP.NET Core et un client React + Vite en TypeScript strict, stylé avec Tailwind CSS.
+Le client affiche l'accueil « Que voir ce soir ? » avec des données de démonstration (lot 1).
 En développement, le navigateur ne parle qu'à Vite, qui relaie `/bff` vers ASP.NET Core.
 
 ```
@@ -11,8 +12,12 @@ Navigateur ──► http://localhost:5173  (Vite)
 ## Structure
 
 ```
-src/Levee.Api/   API ASP.NET Core appelée par le client
-src/client/      Client React + Vite
+src/Levee.Api/                  API ASP.NET Core appelée par le client
+src/client/                     Client React + Vite
+  src/accueil/                  Accueil : page, carrousel d'affiches, affiche, actions
+  src/domaine/                  Types et fonctions pures (heures, jours, programme)
+  src/donnees-demo/             DONNÉES FICTIVES de démonstration, importées par App.tsx seul
+  src/technique/                Contrôle technique de l'API, servi sur /technique
 ```
 
 ## Prérequis
@@ -65,8 +70,9 @@ dotnet run --project src/Levee.Api             # http://localhost:5080
 npm --prefix src/client run dev                # http://localhost:5173
 ```
 
-Ouvrir `http://localhost:5173/`. La page appelle `GET /bff/etat` par une URL relative et affiche
-le service, l'environnement et un horodatage UTC.
+Ouvrir `http://localhost:5173/` : l'accueil. Ouvrir `http://localhost:5173/technique` : le contrôle
+technique, qui appelle `GET /bff/etat` par une URL relative et affiche le service, l'environnement
+et un horodatage UTC.
 
 ## Validation
 
@@ -86,12 +92,23 @@ curl -i http://localhost:5173/bff/inconnu      # 404
 
 Dans le navigateur :
 
-1. `http://localhost:5173/` affiche l'état de l'API ; l'horodatage change à chaque rechargement.
+1. `http://localhost:5173/technique` affiche l'état de l'API (service `Levee.Api`) ; l'horodatage
+   change à chaque rechargement.
 2. Dans l'onglet Réseau, la requête part vers `http://localhost:5173/bff/etat`, sans appel direct
    au port 5080.
-3. ASP.NET Core arrêté, un rechargement affiche le message d'erreur.
+3. ASP.NET Core arrêté, un rechargement de `/technique` affiche « Erreur : L’API est injoignable
+   ou en erreur (HTTP 502). ».
+4. `http://localhost:5173/` affiche l'accueil : titre de l'onglet « levee », surtitre « Jeudi 26
+   novembre · à l’affiche » (date de démonstration), critères marqués « lecture seule », bouton
+   « Voir les séances de ce soir » avec « 6 séances ce soir » et « Préparer une autre sortie ».
+5. Le carrousel défile au doigt, avec les flèches (à partir de 700 px de large) et au clavier
+   (Tab, ← → Début Fin) ; l'affiche centrée est de face, les voisines inclinées et assombries.
+   Avec « réduire les animations » activé dans le système, les affiches restent à plat.
+6. À 375 × 667, « Voir les séances » et « Préparer une autre sortie » sont visibles sans défilement.
+   Les trois boutons de destination affichent un avis « Provisoire » : leurs écrans arrivent aux
+   lots suivants.
 
 ## Hors périmètre à ce stade
 
-Authentification et droits d'accès, persistance en base, service du build React par ASP.NET Core
-et publication.
+Authentification et droits d'accès, persistance en base, liste des séances, fiche séance,
+réservation, branchement des séances au BFF, service du build React par ASP.NET Core et publication.

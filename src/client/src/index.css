@@ -1,0 +1,49 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/bricolage-grotesque/opsz.css';
+@import '@fontsource/instrument-serif/latin-400.css';
+@import '@fontsource/instrument-serif/latin-400-italic.css';
+
+/*
+ * Jetons visuels de levee, repris de la maquette « Que voir ce soir ? » (export Claude Design).
+ * Les couleurs sont en oklch ; les noms décrivent un rôle, pas une teinte.
+ */
+@theme {
+  --color-fond: oklch(0.17 0.015 285);
+  --color-surface: oklch(0.215 0.018 285);
+  --color-surface-survol: oklch(0.25 0.02 285);
+  --color-surface-2: oklch(0.27 0.022 285);
+  --color-filet: oklch(0.34 0.02 285);
+  --color-contour: oklch(0.5 0.02 285);
+  --color-texte: oklch(0.95 0.012 85);
+  --color-texte-doux: oklch(0.74 0.015 285);
+  --color-corail: oklch(0.74 0.16 40);
+  --color-corail-vif: oklch(0.8 0.14 40);
+  --color-danger: oklch(0.76 0.14 25);
+
+  --font-sans: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  --font-editorial: 'Instrument Serif', serif;
+
+  /* Seuils de la maquette : mobile < 700 px, tablette < 1100 px, bureau au-delà. */
+  --breakpoint-*: initial;
+  --breakpoint-tablette: 700px;
+  --breakpoint-bureau: 1100px;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-fond);
+    color: var(--color-texte);
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-corail);
+    outline-offset: 2px;
+  }
+}
