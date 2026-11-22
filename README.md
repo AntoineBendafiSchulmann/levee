@@ -11,35 +11,21 @@ Navigateur ──► http://localhost:5173  (Vite)
 
 ## Structure
 
-Code en anglais, interface en français : les conventions de nommage et le vocabulaire sont dans `CLAUDE.md`. Les dossiers
-antérieurs au lot Billets portent encore des noms français, en attente d'un lot de migration dédié.
+Code en anglais, interface en français : les conventions de nommage et le vocabulaire sont dans `CLAUDE.md`. Les noms
+de jetons Tailwind (`bg-fond`, `text-texte-doux`, `tablette:`…) restent français et seront traduits dans un lot distinct.
 
-```
-server/Levee.Api/               API ASP.NET Core (BFF) appelée par le client
-src/                            Client React + Vite (index.html, package.json et configurations à la racine)
-  composants/                   Composants partagés entre plusieurs fonctionnalités : navigation principale (Navbar),
-                                affiche (Affiche), carte de séance (CarteSeance) et sa frise (FriseHoraire), libellés
-                                et couleurs de statut (presentationStatut.ts), gestion du clic simple sur un lien (clicSimple.ts)
-    ui/                         Primitives sans logique métier : feuille modale (Sheet : dialogue, fermeture, focus, feuille
-                                mobile ou panneau latéral), commune à la feuille de critères et aux réservations
-  bookings/                     Réservation simulée : état et stockage des réservations (useBookings, bookingSessionStorage),
-                                règles (bookingRules.ts : tarifs, 1 à 6 places, référence), feuille « Réservation », « C'est noté »
-                                et « Mes billets » (BookingSheet, BookingForm, BookingReceipt, bookingSummary)
-  accueil/                      Page d'accueil et ses composants propres : pièce à l'affiche et ses voisines
-                                (CarrouselAffiches, useCarrousel, useReducedMotion, useDesktopBreakpoint), séances sous
-                                l'affiche, séances du soir (SeancesDuSoir pour l'affichage, selectionnerSeancesDuSoir pour le choix)
-  resultats/                    Page des résultats (liste complète, filtres, compteurs)
-  piece/                        Page d'une pièce (PagePiece) et ses composants propres : choix du jour et de l'horaire
-                                (ChoixSeance), verdict, trajet et calcul horaire (CalculHoraire)
-  criteres/                     Critères de la sortie : formulaire et feuille qui le contient
-  parcours/                     Navigation : adresses, écran, critères conservés (stockageCriteres), défilement, focus de retour
-  domaine/                      Types et fonctions pures (évaluation, résultats, temps, bornes horaires, textes d'explication) et leurs tests
-  donnees-demo/                 DONNÉES FICTIVES de démonstration, importées par App.tsx côté application et par les tests
-  technique/                    Contrôle technique de l'API, servi sur /technique
-```
+| Élément | Emplacement | Rôle |
+| --- | --- | --- |
+| Frontend React | `src/` | Regroupe le code par fonctionnalité : `home/`, `play/`, `results/`, `criteria/` et `bookings/`. |
+| Composants partagés | `src/components/` | Contient les composants utilisés sur plusieurs écrans, comme `Navbar`, `Poster` et `PerformanceCard`. |
+| Primitives d’interface | `src/components/ui/` | Contient les briques d’interface réutilisables, comme `Sheet`, utilisé pour les critères et les réservations. |
+| Règles métier | `src/domain/` | Évalue les séances selon le trajet, l’heure de départ et l’heure limite de sortie. |
+| Navigation | `src/navigation/` | Gère les routes, l’historique et le retour à l’élément d’origine avec restitution du focus et du défilement. |
+| API ASP.NET Core | `server/Levee.Api/` | Héberge le backend de l’application, qui expose notamment `GET /bff/etat`. |
+| PostgreSQL local | `compose.yaml` | Configure le service PostgreSQL, son port local et son volume de données. |
 
 Une page et les composants qu'elle seule utilise restent dans le dossier de sa fonctionnalité ; un composant
-utilisé par plusieurs fonctionnalités va dans `composants/`.
+utilisé par plusieurs fonctionnalités va dans `components/`.
 
 ## Prérequis
 
@@ -154,7 +140,7 @@ Dans le navigateur :
    tard à » 22 h 00, *Le Jeu de l’amour et du hasard* de 20 h 00 est « À temps » ; à 21 h 50 il devient
    « Fin incertaine » (fin entre 21 h 45 et 21 h 55). En avançant le départ à 16 h 00, ses deux
    représentations (16 h 30 et 20 h 00) apparaissent comme deux cartes distinctes.
-10. Fiche. Sur l'accueil, l'affiche active ouvre `/piece/:idSpectacle`. Au clavier, Entrée ouvre l'affiche
+10. Fiche. Sur l'accueil, l'affiche active ouvre `/piece/:idSpectacle` (adresse publique inchangée). Au clavier, Entrée ouvre l'affiche
    focalisée. La séance présélectionnée est la première qui convient à partir du départ, le jour choisi : c'est
    aussi l'horaire de la légende de l'affiche. Sur `/seances`, chaque carte est un lien vers
    `/seances/:idSeance` : avec départ à 16 h 00 le samedi 28 novembre, la carte de 20 h du *Jeu de l'amour

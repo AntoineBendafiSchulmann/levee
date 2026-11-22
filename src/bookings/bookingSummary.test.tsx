@@ -1,8 +1,8 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { DEMO_SALLES } from '../donnees-demo/salles.demo';
-import { DEMO_SPECTACLES } from '../donnees-demo/spectacles.demo';
+import { DEMO_VENUES } from '../demo-data/venues.demo';
+import { DEMO_PLAYS } from '../demo-data/plays.demo';
 import type { Booking } from './bookingRules';
 import { BookingReceipt } from './BookingReceipt';
 import { summarizeBooking } from './bookingSummary';
@@ -15,9 +15,9 @@ const booking = (performanceId: string, extra: Partial<Booking> = {}): Booking =
   ...extra,
 });
 
-describe('réservation décrite d’après la représentation réservée', () => {
-  it('la représentation de 20 h garde son heure, pas celle de 16 h 30 : deux places, 58 €', () => {
-    expect(summarizeBooking(booking('jeu-amour-hasard-2026-11-28-1200'), DEMO_SPECTACLES, DEMO_SALLES)).toEqual({
+describe('booking described from the booked performance', () => {
+  it('the 8 pm performance keeps its time, not the 4:30 pm one: two seats, 58 €', () => {
+    expect(summarizeBooking(booking('jeu-amour-hasard-2026-11-28-1200'), DEMO_PLAYS, DEMO_VENUES)).toEqual({
       reference: 'LV-4N9',
       title: 'Le Jeu de l’amour et du hasard',
       when: 'Samedi 28 novembre · 20h00',
@@ -25,29 +25,29 @@ describe('réservation décrite d’après la représentation réservée', () =>
       seats: '2 places · plein tarif',
       total: '58 €',
     });
-    expect(summarizeBooking(booking('jeu-amour-hasard-2026-11-28-990'), DEMO_SPECTACLES, DEMO_SALLES)?.when).toBe(
+    expect(summarizeBooking(booking('jeu-amour-hasard-2026-11-28-990'), DEMO_PLAYS, DEMO_VENUES)?.when).toBe(
       'Samedi 28 novembre · 16h30',
     );
   });
 
-  it('tarif réduit et une place : singulier, « moins de 26 ans », prix de la pièce', () => {
+  it('reduced fare and one seat: singular, « moins de 26 ans », play price', () => {
     const summary = summarizeBooking(
       booking('jeu-amour-hasard-2026-11-28-1200', { fare: 'reduced', seatCount: 1 }),
-      DEMO_SPECTACLES,
-      DEMO_SALLES,
+      DEMO_PLAYS,
+      DEMO_VENUES,
     );
     expect(summary?.seats).toBe('1 place · moins de 26 ans');
     expect(summary?.total).toBe('16 €');
   });
 
-  it('une représentation qui n’existe plus ne donne pas de résumé', () => {
-    expect(summarizeBooking(booking('disparue-2026-11-28-1200'), DEMO_SPECTACLES, DEMO_SALLES)).toBeUndefined();
+  it('a performance that no longer exists yields no summary', () => {
+    expect(summarizeBooking(booking('disparue-2026-11-28-1200'), DEMO_PLAYS, DEMO_VENUES)).toBeUndefined();
   });
 
-  it('le reçu et la ligne de « Mes billets » présentent les mêmes informations', () => {
-    const summary = summarizeBooking(booking('jeu-amour-hasard-2026-11-28-1200'), DEMO_SPECTACLES, DEMO_SALLES);
+  it('the receipt and the « Mes billets » row show the same information', () => {
+    const summary = summarizeBooking(booking('jeu-amour-hasard-2026-11-28-1200'), DEMO_PLAYS, DEMO_VENUES);
     if (summary === undefined) {
-      throw new Error('Résumé attendu.');
+      throw new Error('Summary expected.');
     }
     const receipt = renderToStaticMarkup(<BookingReceipt summary={summary} variant="receipt" />);
     const listItem = renderToStaticMarkup(<BookingReceipt summary={summary} variant="listItem" />);

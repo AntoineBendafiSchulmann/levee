@@ -1,15 +1,15 @@
-import { trouverSeance } from '../domaine/seance';
-import type { FareId, Spectacle } from '../domaine/types';
-import type { Stockage } from '../parcours/stockageCriteres';
+import { findPerformance } from '../domain/performances';
+import type { FareId, Play } from '../domain/types';
+import type { SessionStore } from '../navigation/criteriaSessionStorage';
 import { FARE_ORDER, isValidSeatCount, type Booking } from './bookingRules';
 
-/** Clé du `sessionStorage` : les réservations simulées, pour la durée de l'onglet seulement. Contrat persisté : ne change pas. */
+/** `sessionStorage` key: the simulated bookings, for the lifetime of the tab only. Persisted contract: does not change. */
 export const BOOKINGS_STORAGE_KEY = 'levee:reservations';
 
 /*
- * Format écrit dans le `sessionStorage` : `[{ reference, seanceId, tarif: 'plein' | 'reduit', places }]`. Il ne change
- * pas avec les noms du code, pour qu'une réservation enregistrée avant un renommage se relise à l'identique : ce
- * fichier est le seul endroit qui connaît ces noms.
+ * Format written to `sessionStorage`: `[{ reference, seanceId, tarif: 'plein' | 'reduit', places }]`. It does not change
+ * with the code names, so that a booking saved before a rename reads back identically: this
+ * file is the only place that knows these names.
  */
 interface StoredBooking {
   readonly reference: string;
@@ -32,12 +32,12 @@ function toStored(booking: Booking): StoredBooking {
 const REFERENCE_PATTERN = /^LV-[0-9A-Z]+$/;
 
 /**
- * Un JSON lisible n'est pas forcément une liste de réservations acceptable : ce n'est pas un tableau, une entrée n'est
- * pas un objet, la représentation n'existe pas dans la programmation, le tarif est inconnu, le nombre de places sort de
- * 1 à 6, la référence est mal formée ou répétée. Renvoie la liste, ou `null` si une seule entrée est refusée (jamais de
- * liste partielle).
+ * Readable JSON is not necessarily an acceptable list of bookings: it is not an array, an entry is not
+ * an object, the performance does not exist in the schedule, the fare is unknown, the number of seats is outside
+ * 1 to 6, the reference is malformed or repeated. Returns the list, or `null` if a single entry is rejected (never a
+ * partial list).
  */
-export function parseBookings(value: unknown, plays: readonly Spectacle[]): Booking[] | null {
+export function parseBookings(value: unknown, plays: readonly Play[]): Booking[] | null {
   if (!Array.isArray(value)) {
     return null;
   }
@@ -54,7 +54,7 @@ export function parseBookings(value: unknown, plays: readonly Spectacle[]): Book
       !REFERENCE_PATTERN.test(reference) ||
       references.has(reference) ||
       typeof seanceId !== 'string' ||
-      trouverSeance(plays, seanceId) === undefined ||
+      findPerformance(plays, seanceId) === undefined ||
       fare === undefined ||
       !isValidSeatCount(places)
     ) {
@@ -66,8 +66,8 @@ export function parseBookings(value: unknown, plays: readonly Spectacle[]): Book
   return bookings;
 }
 
-/** Réservations de l'onglet ; liste vide si rien, illisible, refusé par la programmation ou stockage inaccessible. */
-export function readBookings(storage: Stockage | undefined, plays: readonly Spectacle[]): Booking[] {
+/** Tab bookings; empty list if nothing stored, unreadable, rejected by the schedule or storage inaccessible. */
+export function readBookings(storage: SessionStore | undefined, plays: readonly Play[]): Booking[] {
   try {
     const raw = storage?.getItem(BOOKINGS_STORAGE_KEY) ?? null;
     return raw === null ? [] : (parseBookings(JSON.parse(raw) as unknown, plays) ?? []);
@@ -76,10 +76,10 @@ export function readBookings(storage: Stockage | undefined, plays: readonly Spec
   }
 }
 
-export function writeBookings(storage: Stockage | undefined, bookings: readonly Booking[]): void {
+export function writeBookings(storage: SessionStore | undefined, bookings: readonly Booking[]): void {
   try {
     storage?.setItem(BOOKINGS_STORAGE_KEY, JSON.stringify(bookings.map(toStored)));
   } catch {
-    // Les réservations restent en mémoire pour cette session de la page : seul le rechargement les oublie.
+    // Bookings stay in memory for this page session: only a reload forgets them.
   }
 }

@@ -1,38 +1,38 @@
-import { Affiche } from '../composants/Affiche';
-import { BORDURE_GROUPE, TEXTE_GROUPE } from '../composants/presentationStatut';
-import { verdictSeance } from '../domaine/explication';
-import type { ResultatSeance } from '../domaine/resultats';
-import { formaterHeure, libelleJourLong } from '../domaine/temps';
-import type { CriteresSortie, FareId } from '../domaine/types';
+import { Poster } from '../components/Poster';
+import { GROUP_BORDER, GROUP_TEXT } from '../components/statusPresentation';
+import { performanceVerdict } from '../domain/explanation';
+import type { PerformanceResult } from '../domain/results';
+import { formatTime, dayLongLabel } from '../domain/time';
+import type { OutingCriteria, FareId } from '../domain/types';
 import { bookingTotal, FARE_LABEL, FARE_ORDER, MAX_SEAT_COUNT, MIN_SEAT_COUNT, unitPrice } from './bookingRules';
 import { endTimeLabel, formatAmount } from './bookingSummary';
 
 interface Props {
-  /** La représentation exacte sélectionnée sur la page de la pièce, avec son évaluation pour les critères courants. */
-  readonly result: ResultatSeance;
-  readonly criteria: CriteresSortie;
-  readonly originLabel: string;
+  /** The exact performance selected on the play page, with its evaluation for the current criteria. */
+  readonly result: PerformanceResult;
+  readonly criteria: OutingCriteria;
+  readonly departurePointLabel: string;
   readonly fare: FareId;
   readonly seatCount: number;
   readonly onFareChange: (fare: FareId) => void;
-  /** `1` ou `-1` : une place de plus ou de moins. */
+  /** `1` or `-1`: one seat more or fewer. */
   readonly onSeatCountChange: (delta: number) => void;
 }
 
 const ROUND_BUTTON = 'size-11 rounded-full border border-contour text-[22px] aria-disabled:opacity-35';
 
 /**
- * Contenu de la feuille « Réservation » : mention de simulation, récapitulatif de la représentation choisie, verdict
- * quand elle n'est pas « à temps », choix du tarif (propre à la pièce) et du nombre de places (de 1 à 6).
+ * Content of the « Réservation » sheet: simulation notice, summary of the selected performance, verdict
+ * when it is not « à temps », choice of fare (specific to the play) and number of seats (1 to 6).
  */
-export function BookingForm({ result, criteria, originLabel, fare, seatCount, onFareChange, onSeatCountChange }: Props) {
-  const { spectacle: play, salle: venue, seance: performance, evaluation } = result;
-  const { groupe: group } = evaluation;
+export function BookingForm({ result, criteria, departurePointLabel, fare, seatCount, onFareChange, onSeatCountChange }: Props) {
+  const { play: play, venue: venue, performance: performance, evaluation } = result;
+  const { group: group } = evaluation;
   const rows: readonly (readonly [string, string])[] = [
-    ['Date', libelleJourLong(performance.jour)],
-    ['Heure', formaterHeure(performance.debutMinutes)],
-    ['Lieu', `${venue.nom}, ${venue.adresse}`],
-    ['Sortie calculée', endTimeLabel(evaluation.fin)],
+    ['Date', dayLongLabel(performance.day)],
+    ['Heure', formatTime(performance.startMinutes)],
+    ['Lieu', `${venue.name}, ${venue.address}`],
+    ['Sortie calculée', endTimeLabel(evaluation.end)],
     ['Tarif', `${FARE_LABEL[fare]} · ${formatAmount(unitPrice(play, fare))}`],
     ['Places', String(seatCount)],
     ['Total', formatAmount(bookingTotal(play, fare, seatCount))],
@@ -45,10 +45,10 @@ export function BookingForm({ result, criteria, originLabel, fare, seatCount, on
       </p>
 
       <div className="grid grid-cols-[84px_minmax(0,1fr)] items-start gap-4">
-        <Affiche affiche={play.affiche} titre={play.titre} auteur={play.auteur} salle={venue.nom} />
+        <Poster poster={play.poster} title={play.title} author={play.author} venueName={venue.name} />
         <div className="flex min-w-0 flex-col gap-1.5">
-          <p className="font-editorial text-[28px] leading-none italic">{play.titre}</p>
-          <p className="text-[13px] text-texte-doux">{play.auteur}</p>
+          <p className="font-editorial text-[28px] leading-none italic">{play.title}</p>
+          <p className="text-[13px] text-texte-doux">{play.author}</p>
           <dl className="flex flex-col gap-1.5">
             {rows.map(([name, value]) => (
               <div key={name} className="flex justify-between gap-3 border-t border-filet pt-1.5 text-sm">
@@ -60,9 +60,9 @@ export function BookingForm({ result, criteria, originLabel, fare, seatCount, on
         </div>
       </div>
 
-      {group === 'possible' ? null : (
-        <p className={`rounded-md border px-3.5 py-3 text-sm leading-snug ${TEXTE_GROUPE[group]} ${BORDURE_GROUPE[group]}`}>
-          {verdictSeance(result, criteria, originLabel)}
+      {group === 'feasible' ? null : (
+        <p className={`rounded-md border px-3.5 py-3 text-sm leading-snug ${GROUP_TEXT[group]} ${GROUP_BORDER[group]}`}>
+          {performanceVerdict(result, criteria, departurePointLabel)}
         </p>
       )}
 

@@ -1,13 +1,13 @@
-import { trouverSalle, trouverSeance } from '../domaine/seance';
-import { formaterHeure, formaterPlageHeures, libelleJourLong } from '../domaine/temps';
-import { pluriel } from '../domaine/texte';
-import type { Salle, Spectacle } from '../domaine/types';
+import { findVenue, findPerformance } from '../domain/performances';
+import { formatTime, formatTimeRange, dayLongLabel } from '../domain/time';
+import { pluralize } from '../domain/text';
+import type { Venue, Play } from '../domain/types';
 import { bookingTotal, FARE_LABEL_IN_SUMMARY, type Booking } from './bookingRules';
 
-/** Une réservation prête à être affichée : la même pour le reçu de confirmation et la liste « Mes billets ». */
+/** A booking ready to display: the same for the confirmation receipt and the « Mes billets » list. */
 export interface BookingSummary {
   readonly reference: string;
-  /** Titre de la pièce. */
+  /** Play title. */
   readonly title: string;
   /** « Samedi 28 novembre · 20h00 ». */
   readonly when: string;
@@ -24,34 +24,34 @@ export function formatAmount(euros: number): string {
 }
 
 export function whenLabel(day: string, startMinutes: number): string {
-  return `${libelleJourLong(day)} · ${formaterHeure(startMinutes)}`;
+  return `${dayLongLabel(day)} · ${formatTime(startMinutes)}`;
 }
 
-export function venueLabel(venue: Salle): string {
-  return `${venue.nom}, ${venue.adresse}`;
+export function venueLabel(venue: Venue): string {
+  return `${venue.name}, ${venue.address}`;
 }
 
 export function endTimeLabel(end: { readonly min: number; readonly max: number } | null): string {
-  return end === null ? 'inconnue' : formaterPlageHeures(end);
+  return end === null ? 'inconnue' : formatTimeRange(end);
 }
 
-/** Décrit une réservation d'après la programmation ; `undefined` si sa représentation n'existe plus. */
+/** Describes a booking from the schedule; `undefined` if its performance no longer exists. */
 export function summarizeBooking(
   booking: Booking,
-  plays: readonly Spectacle[],
-  venues: readonly Salle[],
+  plays: readonly Play[],
+  venues: readonly Venue[],
 ): BookingSummary | undefined {
-  const found = trouverSeance(plays, booking.performanceId);
+  const found = findPerformance(plays, booking.performanceId);
   if (found === undefined) {
     return undefined;
   }
-  const { spectacle: play, seance: performance } = found;
+  const { play: play, performance: performance } = found;
   return {
     reference: booking.reference,
-    title: play.titre,
-    when: whenLabel(performance.jour, performance.debutMinutes),
-    venue: venueLabel(trouverSalle(venues, play)),
-    seats: `${pluriel(booking.seatCount, 'place', 'places')} · ${FARE_LABEL_IN_SUMMARY[booking.fare]}`,
+    title: play.title,
+    when: whenLabel(performance.day, performance.startMinutes),
+    venue: venueLabel(findVenue(venues, play)),
+    seats: `${pluralize(booking.seatCount, 'place', 'places')} · ${FARE_LABEL_IN_SUMMARY[booking.fare]}`,
     total: formatAmount(bookingTotal(play, booking.fare, booking.seatCount)),
   };
 }

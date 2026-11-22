@@ -4,8 +4,8 @@
 @import '@fontsource/instrument-serif/latin-400-italic.css';
 
 /*
- * Jetons visuels de levee, repris de la maquette « Que voir ce soir ? » (export Claude Design).
- * Les couleurs sont en oklch ; les noms décrivent un rôle, pas une teinte.
+ * Visual tokens for levee, taken from the « Que voir ce soir ? » mockup (Claude Design export).
+ * Colours are in oklch; names describe a role, not a hue.
  */
 @theme {
   --color-fond: oklch(0.17 0.015 285);
@@ -25,7 +25,7 @@
   --font-sans: 'Bricolage Grotesque Variable', system-ui, sans-serif;
   --font-editorial: 'Instrument Serif', serif;
 
-  /* Seuils de la maquette : mobile < 700 px, tablette < 1100 px, bureau < 2200 px, ultra-wide au-delà. */
+  /* Mockup breakpoints: mobile < 700 px, tablet < 1100 px, desktop < 2200 px, ultra-wide beyond. */
   --breakpoint-*: initial;
   --breakpoint-tablette: 700px;
   --breakpoint-bureau: 1100px;

@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { trouverSeance } from '../domaine/seance';
-import type { FareId, Spectacle } from '../domaine/types';
-import { stockageOnglet } from '../parcours/stockageCriteres';
+import { findPerformance } from '../domain/performances';
+import type { FareId, Play } from '../domain/types';
+import { tabStorage } from '../navigation/criteriaSessionStorage';
 import { addBooking, clampSeatCount, INITIAL_FARE, INITIAL_SEAT_COUNT, type Booking } from './bookingRules';
 import { readBookings, writeBookings } from './bookingSessionStorage';
 
-/** Ce que montre la feuille : le formulaire d'une représentation, le reçu d'une réservation, ou « Mes billets ». */
+/** What the sheet shows: a performance's form, a booking's receipt, or « Mes billets ». */
 export type SheetView =
   | { readonly type: 'form'; readonly performanceId: string }
   | { readonly type: 'confirmation'; readonly reference: string }
@@ -14,20 +14,20 @@ export type SheetView =
 
 interface SheetState {
   readonly open: boolean;
-  /** La vue reste en place quand la feuille se ferme, pour que son contenu ne disparaisse pas pendant l'animation. */
+  /** The view stays in place when the sheet closes, so its content does not vanish during the animation. */
   readonly view: SheetView;
-  /** Choix du formulaire : à chaque ouverture il repart du plein tarif et de deux places. */
+  /** Form choices: each time it opens it restarts from full fare and two seats. */
   readonly fare: FareId;
   readonly seatCount: number;
 }
 
 /**
- * Réservations simulées de l'onglet (`items`, `count`) (gardées dans le `sessionStorage`, en mémoire seulement si le stockage est
- * inaccessible) et état de la feuille qui les présente. Le compteur de la navbar est le nombre de réservations,
- * pas le nombre de places.
+ * Simulated bookings of the tab (`items`, `count`) (kept in `sessionStorage`, in memory only if storage is
+ * inaccessible) and state of the sheet presenting them. The navbar counter is the number of bookings,
+ * not the number of seats.
  */
-export function useBookings(plays: readonly Spectacle[]) {
-  const [bookings, setBookings] = useState<readonly Booking[]>(() => readBookings(stockageOnglet(), plays));
+export function useBookings(plays: readonly Play[]) {
+  const [bookings, setBookings] = useState<readonly Booking[]>(() => readBookings(tabStorage(), plays));
   const [sheet, setSheet] = useState<SheetState>({
     open: false,
     view: { type: 'tickets' },
@@ -36,14 +36,14 @@ export function useBookings(plays: readonly Spectacle[]) {
   });
 
   useEffect(() => {
-    writeBookings(stockageOnglet(), bookings);
+    writeBookings(tabStorage(), bookings);
   }, [bookings]);
 
   const close = useCallback(() => {
     setSheet((previous) => (previous.open ? { ...previous, open: false } : previous));
   }, []);
 
-  // Retour ou avance du navigateur : l'écran change, la feuille ne reste pas ouverte dessus.
+  // Browser back or forward: the screen changes, the sheet does not stay open on top of it.
   useEffect(() => {
     window.addEventListener('popstate', close);
     return () => {
@@ -58,12 +58,12 @@ export function useBookings(plays: readonly Spectacle[]) {
   const chooseFare = useCallback((fare: FareId) => {
     setSheet((previous) => ({ ...previous, fare }));
   }, []);
-  /** Une place de plus ou de moins, sans sortir de 1 à 6. */
+  /** One seat more or fewer, staying within 1 to 6. */
   const changeSeatCount = useCallback((delta: number) => {
     setSheet((previous) => ({ ...previous, seatCount: clampSeatCount(previous.seatCount + delta) }));
   }, []);
 
-  /** Ouvre le formulaire pour la représentation exacte donnée (identifiant `spectacle-jour-début`). */
+  /** Opens the form for the given exact performance (id `play-day-start`). */
   const openBookingForm = useCallback(
     (performanceId: string) => {
       open({ type: 'form', performanceId });
@@ -74,16 +74,16 @@ export function useBookings(plays: readonly Spectacle[]) {
     open({ type: 'tickets' });
   }, [open]);
 
-  /** Crée une seule réservation, avec le tarif et les places du formulaire, et affiche son reçu ; sans effet si la représentation n'existe pas. */
+  /** Creates a single booking, with the form's fare and seats, and shows its receipt; no effect if the performance does not exist. */
   const confirm = useCallback(
     (performanceId: string) => {
-      const found = trouverSeance(plays, performanceId);
+      const found = findPerformance(plays, performanceId);
       if (found === undefined) {
         return;
       }
       const added = addBooking(bookings, {
         performanceId,
-        startMinutes: found.seance.debutMinutes,
+        startMinutes: found.performance.startMinutes,
         fare: sheet.fare,
         seatCount: sheet.seatCount,
       });

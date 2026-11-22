@@ -9,7 +9,7 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      // Le navigateur ne connaît que l'origine de Vite ; /bff est relayé vers ASP.NET Core.
+      // The browser only knows Vite's origin; /bff is relayed to ASP.NET Core.
       '/bff': 'http://localhost:5080',
     },
   },

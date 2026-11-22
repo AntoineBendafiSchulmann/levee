@@ -2,14 +2,14 @@ import type { BookingSummary } from './bookingSummary';
 
 interface Props {
   readonly summary: BookingSummary;
-  /** `receipt` : la confirmation, avec la mention de simulation ; `listItem` : une ligne de « Mes billets ». */
+  /** `receipt`: the confirmation, with the simulation notice; `listItem`: a row of « Mes billets ». */
   readonly variant: 'receipt' | 'listItem';
 }
 
 /**
- * Une réservation simulée. Le reçu de la confirmation et chaque ligne de « Mes billets » passent par ce composant avec
- * le même `BookingSummary` : ils présentent forcément les mêmes informations (référence, pièce, date et heure,
- * lieu, places et tarif, total).
+ * A simulated booking. The confirmation receipt and each row of « Mes billets » go through this component with
+ * the same `BookingSummary`: they necessarily show the same information (reference, play, date and time,
+ * venue, seats and fare, total).
  */
 export function BookingReceipt({ summary, variant }: Props) {
   const receipt = variant === 'receipt';

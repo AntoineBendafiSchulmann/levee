@@ -1,8 +1,8 @@
-import { Sheet } from '../composants/ui/Sheet';
-import { resultatDeSeance } from '../domaine/resultats';
-import { trouverSalle, trouverSeance } from '../domaine/seance';
-import type { CriteresSortie, Salle, Spectacle } from '../domaine/types';
-import type { ProvenancePiece } from '../parcours/chemins';
+import { Sheet } from '../components/ui/Sheet';
+import { performanceResult } from '../domain/results';
+import { findVenue, findPerformance } from '../domain/performances';
+import type { OutingCriteria, Venue, Play } from '../domain/types';
+import type { PlayPageSource } from '../navigation/routes';
 import { BookingForm } from './BookingForm';
 import { BookingReceipt } from './BookingReceipt';
 import { bookingTotal } from './bookingRules';
@@ -11,13 +11,13 @@ import type { Bookings } from './useBookings';
 
 interface BookingSheetProps {
   readonly bookings: Bookings;
-  readonly plays: readonly Spectacle[];
-  readonly venues: readonly Salle[];
-  readonly criteria: CriteresSortie;
-  readonly originLabel: string;
-  /** D'où l'on est venu sur la page de la pièce : le bouton de retour de la confirmation en dépend. */
-  readonly provenance: ProvenancePiece | null;
-  /** Retour à l'écran d'origine, quand la confirmation est affichée sur la page d'une pièce. */
+  readonly plays: readonly Play[];
+  readonly venues: readonly Venue[];
+  readonly criteria: OutingCriteria;
+  readonly departurePointLabel: string;
+  /** Where the user came from to reach the play page: the confirmation's back button depends on it. */
+  readonly source: PlayPageSource | null;
+  /** Back to the originating screen, when the confirmation is shown on a play page. */
   readonly onBack: () => void;
 }
 
@@ -25,21 +25,21 @@ const BUTTON = 'min-h-[54px] rounded-full px-4 font-semibold';
 const SECONDARY_BUTTON = `${BUTTON} flex-[1_1_150px] border border-contour text-[15px] hover:bg-surface-survol`;
 
 /**
- * La feuille des réservations, montée une seule fois à la racine : « Réservation » (la représentation sélectionnée, le
- * tarif et les places), « C'est noté » (le reçu de la réservation qui vient d'être créée) et « Mes billets » (toutes les
- * réservations de l'onglet, la plus récente en premier, ou l'état vide).
+ * The bookings sheet, mounted once at the root: « Réservation » (the selected performance, the
+ * fare and the seats), « C'est noté » (the receipt of the booking just created) and « Mes billets » (all the
+ * tab's bookings, most recent first, or the empty state).
  */
-export function BookingSheet({ bookings, plays, venues, criteria, originLabel, provenance, onBack }: BookingSheetProps) {
+export function BookingSheet({ bookings, plays, venues, criteria, departurePointLabel, source, onBack }: BookingSheetProps) {
   const { sheet, close } = bookings;
   const { view } = sheet;
 
   if (view.type === 'form') {
-    const found = trouverSeance(plays, view.performanceId);
+    const found = findPerformance(plays, view.performanceId);
     if (found === undefined) {
       return null;
     }
-    const { spectacle: play, seance: performance } = found;
-    const result = resultatDeSeance(play, trouverSalle(venues, play), performance, criteria);
+    const { play: play, performance: performance } = found;
+    const result = performanceResult(play, findVenue(venues, play), performance, criteria);
     return (
       <Sheet
         open={sheet.open}
@@ -65,7 +65,7 @@ export function BookingSheet({ bookings, plays, venues, criteria, originLabel, p
         <BookingForm
           result={result}
           criteria={criteria}
-          originLabel={originLabel}
+          departurePointLabel={departurePointLabel}
           fare={sheet.fare}
           seatCount={sheet.seatCount}
           onFareChange={bookings.chooseFare}
@@ -96,7 +96,7 @@ export function BookingSheet({ bookings, plays, venues, criteria, originLabel, p
               }}
               className={`${BUTTON} flex-[1_1_150px] bg-texte text-[15px] font-extrabold text-fond hover:opacity-90`}
             >
-              {provenance === 'resultats' ? 'Retour aux résultats' : 'Retour à l’accueil'}
+              {source === 'results' ? 'Retour aux résultats' : 'Retour à l’accueil'}
             </button>
           </div>
         }
