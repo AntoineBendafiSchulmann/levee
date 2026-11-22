@@ -4,7 +4,7 @@ import { DEMO_CRITERES_INITIAUX } from '../donnees-demo/criteres.demo';
 import { DEMO_SALLES } from '../donnees-demo/salles.demo';
 import { DEMO_SPECTACLES } from '../donnees-demo/spectacles.demo';
 import { construireResultats, resultatDeSeance } from './resultats';
-import { choisirSeance, identifiantSeance, resoudreFiche, trouverSalle, trouverSeance } from './seance';
+import { choisirSeance, identifiantSeance, resoudrePagePiece, trouverSalle, trouverSeance } from './seance';
 import type { CriteresSortie, Spectacle } from './types';
 
 const SAMEDI = '2026-11-28';
@@ -84,8 +84,8 @@ describe('séance présélectionnée à l’ouverture d’une pièce', () => {
       for (const departMinutes of [heure(14), heure(16), heure(18, 30), heure(21)]) {
         for (const spectacleDemo of DEMO_SPECTACLES) {
           const attendu = choisirSeance(spectacleDemo, trouverSalle(DEMO_SALLES, spectacleDemo), criteres({ jour, departMinutes }));
-          const fiche = resoudreFiche(DEMO_SPECTACLES, DEMO_SALLES, { type: 'piece', id: spectacleDemo.id }, criteres({ jour, departMinutes }));
-          expect(fiche?.seance).toEqual(attendu);
+          const pagePiece = resoudrePagePiece(DEMO_SPECTACLES, DEMO_SALLES, { type: 'piece', id: spectacleDemo.id }, criteres({ jour, departMinutes }));
+          expect(pagePiece?.seance).toEqual(attendu);
         }
       }
     }
@@ -95,14 +95,14 @@ describe('séance présélectionnée à l’ouverture d’une pièce', () => {
 describe('résolution d’une adresse de fiche', () => {
   it('/seances/:id garde la séance demandée même si les critères en préféreraient une autre', () => {
     const id = identifiantSeance(JEU, { jour: SAMEDI, debutMinutes: heure(20) });
-    const fiche = resoudreFiche(DEMO_SPECTACLES, DEMO_SALLES, { type: 'seance', id }, criteres({ jour: SAMEDI, departMinutes: heure(16) }));
-    expect(fiche?.seance.debutMinutes).toBe(heure(20));
-    expect(fiche?.salle.id).toBe('rotonde');
+    const pagePiece = resoudrePagePiece(DEMO_SPECTACLES, DEMO_SALLES, { type: 'seance', id }, criteres({ jour: SAMEDI, departMinutes: heure(16) }));
+    expect(pagePiece?.seance.debutMinutes).toBe(heure(20));
+    expect(pagePiece?.salle.id).toBe('rotonde');
   });
 
   it('une pièce ou une séance inconnue ne donne pas de fiche', () => {
-    expect(resoudreFiche(DEMO_SPECTACLES, DEMO_SALLES, { type: 'piece', id: 'inconnue' }, criteres())).toBeUndefined();
-    expect(resoudreFiche(DEMO_SPECTACLES, DEMO_SALLES, { type: 'seance', id: 'inconnue' }, criteres())).toBeUndefined();
+    expect(resoudrePagePiece(DEMO_SPECTACLES, DEMO_SALLES, { type: 'piece', id: 'inconnue' }, criteres())).toBeUndefined();
+    expect(resoudrePagePiece(DEMO_SPECTACLES, DEMO_SALLES, { type: 'seance', id: 'inconnue' }, criteres())).toBeUndefined();
   });
 });
 

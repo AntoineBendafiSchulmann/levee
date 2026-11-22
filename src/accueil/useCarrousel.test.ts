@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { borner, etatFleches, indiceApresTouche, indiceDepuisDefilement, resoudreSelection, sensBalayage, SEUIL_BALAYAGE_PX, voisins } from './useCarrousel';
+import { borner, etatFleches, indiceApresTouche, indiceDepuisDefilement, resoudrePieceActive, sensBalayage, SEUIL_BALAYAGE_PX, voisins } from './useCarrousel';
 
 describe('état des flèches du carrousel (arrêt aux bords)', () => {
   it('première affiche : « précédente » inactive, « suivante » active', () => {
@@ -103,23 +103,23 @@ describe('sélection suivie par identifiant de pièce', () => {
   const dimanche = ['misanthrope', 'jeu', 'avare', 'cyrano'];
 
   it('la pièce choisie reste active quand elle change de position dans la liste (Jeu : 3e → 2e)', () => {
-    expect(resoudreSelection(avant, 'jeu')).toEqual({ id: 'jeu', indice: 2 });
+    expect(resoudrePieceActive(avant, 'jeu')).toEqual({ id: 'jeu', indice: 2 });
     // Avec l'ancien indice (2), la liste du dimanche aurait donné « avare » : c'est la régression à détecter.
-    expect(resoudreSelection(dimanche, 'jeu')).toEqual({ id: 'jeu', indice: 1 });
-    expect(resoudreSelection(dimanche, 'jeu').id).not.toBe(dimanche[2]);
+    expect(resoudrePieceActive(dimanche, 'jeu')).toEqual({ id: 'jeu', indice: 1 });
+    expect(resoudrePieceActive(dimanche, 'jeu').id).not.toBe(dimanche[2]);
   });
 
   it('une pièce qui disparaît de la liste est remplacée par la première pièce disponible', () => {
-    expect(resoudreSelection(dimanche, 'cle')).toEqual({ id: 'misanthrope', indice: 0 });
-    expect(resoudreSelection(dimanche, 'huis-clos')).toEqual({ id: 'misanthrope', indice: 0 });
+    expect(resoudrePieceActive(dimanche, 'cle')).toEqual({ id: 'misanthrope', indice: 0 });
+    expect(resoudrePieceActive(dimanche, 'huis-clos')).toEqual({ id: 'misanthrope', indice: 0 });
   });
 
   it('sans choix préalable, première pièce de la liste', () => {
-    expect(resoudreSelection(avant, null)).toEqual({ id: 'misanthrope', indice: 0 });
+    expect(resoudrePieceActive(avant, null)).toEqual({ id: 'misanthrope', indice: 0 });
   });
 
   it('liste vide : aucune pièce active (état vide de l’accueil)', () => {
-    expect(resoudreSelection([], 'jeu')).toEqual({ id: null, indice: 0 });
-    expect(resoudreSelection([], null)).toEqual({ id: null, indice: 0 });
+    expect(resoudrePieceActive([], 'jeu')).toEqual({ id: null, indice: 0 });
+    expect(resoudrePieceActive([], null)).toEqual({ id: null, indice: 0 });
   });
 });

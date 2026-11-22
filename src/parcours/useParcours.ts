@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { CibleFiche } from '../domaine/seance';
+import type { CiblePagePiece } from '../domaine/seance';
 import type { CriteresSortie } from '../domaine/types';
-import { ecrireCriteres, lireCriteres, stockageOnglet, type ContraintesCriteres } from './memoireCriteres';
-import { analyserChemin, ancreDepuisAdresse, cheminCible, cheminEcran, origineParDefaut, type Ecran, type OrigineFiche, type Route } from './chemins';
+import { ecrireCriteres, lireCriteres, stockageOnglet, type ContraintesCriteres } from './stockageCriteres';
+import { analyserChemin, ancreDepuisUrl, cheminCible, cheminEcran, provenanceParDefaut, type Ecran, type ProvenancePiece, type Route } from './chemins';
 
-export type { Ecran, OrigineFiche } from './chemins';
+export type { Ecran, ProvenancePiece } from './chemins';
 /** Défilement vertical mémorisé, par page. */
 export type CleDefilement = 'accueil' | 'resultats';
 
@@ -16,7 +16,7 @@ export type CleDefilement = 'accueil' | 'resultats';
  */
 interface EtatHistorique {
   readonly levee: true;
-  readonly origine: OrigineFiche;
+  readonly origine: ProvenancePiece;
   readonly cleOrigine: string | null;
 }
 
@@ -34,8 +34,8 @@ function lireEtatHistorique(): EtatHistorique | null {
 
 interface Navigation {
   readonly chemin: string;
-  /** Origine de la fiche affichée (`null` hors fiche). */
-  readonly origine: { readonly origine: OrigineFiche; readonly cle: string | null } | null;
+  /** Provenance de la page de pièce affichée (`null` hors page de pièce). */
+  readonly origine: { readonly origine: ProvenancePiece; readonly cle: string | null } | null;
   /** Clé de l'élément qui retrouve le focus après un retour depuis la fiche. */
   readonly cleRetour: string | null;
 }
@@ -45,11 +45,11 @@ function navigationDepuisLocation(precedente: Navigation | null): Navigation {
   const route = analyserChemin(chemin);
   const etat = lireEtatHistorique();
   const origine =
-    route.ecran === 'fiche'
-      ? { origine: etat?.origine ?? origineParDefaut(route), cle: etat?.cleOrigine ?? null }
+    route.ecran === 'piece'
+      ? { origine: etat?.origine ?? provenanceParDefaut(route), cle: etat?.cleOrigine ?? null }
       : null;
   const avant = precedente?.origine ?? null;
-  const cleRetour = route.ecran !== 'fiche' && avant?.origine === route.ecran ? avant.cle : null;
+  const cleRetour = route.ecran !== 'piece' && avant?.origine === route.ecran ? avant.cle : null;
   return { chemin, origine, cleRetour };
 }
 
@@ -74,9 +74,9 @@ export function useParcours(criteresInitiaux: CriteresSortie, contraintes: Contr
   const [feuilleOuverte, setFeuilleOuverte] = useState(false);
   /** Vrai après la première navigation de l'utilisateur : la page d'arrivée y place alors le focus. */
   const [naviguee, setNaviguee] = useState(false);
-  const ancre = useRef<'selection' | null>(ancreDepuisAdresse(window.location.pathname, window.location.hash));
+  const ancre = useRef<'seances-du-soir' | null>(ancreDepuisUrl(window.location.pathname, window.location.hash));
   /** Pièce à l'affiche sur l'accueil, retenue par son identifiant : elle suit la pièce, pas sa position dans la liste. */
-  const afficheActive = useRef<string | null>(null);
+  const pieceActive = useRef<string | null>(null);
   const positions = useRef<Record<CleDefilement, number>>({ accueil: 0, resultats: 0 });
 
   const route: Route = analyserChemin(navigation.chemin);
@@ -95,7 +95,7 @@ export function useParcours(criteresInitiaux: CriteresSortie, contraintes: Contr
   }, [synchroniser]);
 
   const aller = useCallback(
-    (cible: Exclude<Ecran, 'fiche'>) => {
+    (cible: Exclude<Ecran, 'piece'>) => {
       if (window.location.pathname !== cheminEcran(cible)) {
         window.history.pushState(null, '', cheminEcran(cible));
       }
@@ -105,8 +105,8 @@ export function useParcours(criteresInitiaux: CriteresSortie, contraintes: Contr
   );
 
   /** Ouvre une fiche ; `cleFocus` désigne l'élément (carte, affiche) qui retrouvera le focus au retour. */
-  const ouvrirFiche = useCallback(
-    (cible: CibleFiche, origine: OrigineFiche, cleFocus: string) => {
+  const ouvrirPiece = useCallback(
+    (cible: CiblePagePiece, origine: ProvenancePiece, cleFocus: string) => {
       const etat: EtatHistorique = { levee: true, origine, cleOrigine: cleFocus };
       window.history.pushState(etat, '', cheminCible(cible));
       synchroniser();
@@ -133,11 +133,11 @@ export function useParcours(criteresInitiaux: CriteresSortie, contraintes: Contr
    * (même effet que le retour du navigateur : critères, défilement et focus restitués). Arrivé directement,
    * il n'y a rien avant : on va à l'écran d'origine.
    */
-  const retournerDeFiche = useCallback(() => {
+  const retournerDePiece = useCallback(() => {
     if (lireEtatHistorique() !== null) {
       window.history.back();
     } else {
-      aller(origineParDefaut(analyserChemin(window.location.pathname)));
+      aller(provenanceParDefaut(analyserChemin(window.location.pathname)));
     }
   }, [aller]);
 
@@ -159,21 +159,21 @@ export function useParcours(criteresInitiaux: CriteresSortie, contraintes: Contr
     positions.current.accueil = 0;
     aller('accueil');
   }, [aller]);
-  /** « Séances de la soirée » depuis une autre page : l'accueil s'ouvre sur la sélection de séances. */
-  const allerSelection = useCallback(() => {
-    ancre.current = 'selection';
+  /** « Séances de la soirée » depuis une autre page : l'accueil s'ouvre sur les séances du soir. */
+  const allerSeancesDuSoir = useCallback(() => {
+    ancre.current = 'seances-du-soir';
     aller('accueil');
   }, [aller]);
   /** Lit une seule fois l'ancre demandée par la navigation, puis l'oublie. */
-  const consommerAncre = useCallback((): 'selection' | null => {
+  const consommerAncre = useCallback((): 'seances-du-soir' | null => {
     const demandee = ancre.current;
     ancre.current = null;
     return demandee;
   }, []);
 
-  const lireAfficheActive = useCallback(() => afficheActive.current, []);
-  const memoriserAfficheActive = useCallback((id: string) => {
-    afficheActive.current = id;
+  const lirePieceActive = useCallback(() => pieceActive.current, []);
+  const memoriserPieceActive = useCallback((id: string) => {
+    pieceActive.current = id;
   }, []);
 
   const lirePosition = useCallback((cle: CleDefilement) => positions.current[cle], []);
@@ -184,7 +184,7 @@ export function useParcours(criteresInitiaux: CriteresSortie, contraintes: Contr
   return {
     ecran: route.ecran,
     cible: route.cible,
-    origineFiche: navigation.origine?.origine ?? null,
+    provenancePiece: navigation.origine?.origine ?? null,
     cleRetour: navigation.cleRetour,
     criteres,
     feuilleOuverte,
@@ -194,15 +194,15 @@ export function useParcours(criteresInitiaux: CriteresSortie, contraintes: Contr
     fermerFeuille,
     voirSeances,
     retournerAccueil,
-    allerSelection,
+    allerSeancesDuSoir,
     consommerAncre,
-    ouvrirFiche,
+    ouvrirPiece,
     choisirSeance,
-    retournerDeFiche,
+    retournerDePiece,
     lirePosition,
     memoriserPosition,
-    lireAfficheActive,
-    memoriserAfficheActive,
+    lirePieceActive,
+    memoriserPieceActive,
   };
 }
 

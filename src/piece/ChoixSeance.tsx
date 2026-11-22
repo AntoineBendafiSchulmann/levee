@@ -1,7 +1,7 @@
 import type { Evaluation } from '../domaine/evaluation';
 import { formaterHeure, formaterPlageHeures, libelleJourCourt } from '../domaine/temps';
 import type { JourIso, Seance } from '../domaine/types';
-import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../composants/statut';
+import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../composants/presentationStatut';
 
 export interface LigneSeance {
   readonly identifiant: string;
@@ -35,7 +35,7 @@ function ligneSortie({ fin }: Evaluation): string {
 }
 
 /** Onglets de jour puis séances de ce jour. Un onglet filtre la liste ; seul un clic sur un horaire change la séance choisie. */
-export function ListeSeances({ jours, jourAffiche, aujourdhui, lignes, identifiantChoisi, onJour, onSeance }: Props) {
+export function ChoixSeance({ jours, jourAffiche, aujourdhui, lignes, identifiantChoisi, onJour, onSeance }: Props) {
   return (
     <>
       <div role="group" aria-label="Jour" className="flex gap-1.5 overflow-x-auto [scrollbar-width:none]">

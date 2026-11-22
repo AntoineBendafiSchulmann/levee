@@ -1,5 +1,5 @@
 import { Affiche } from './Affiche';
-import { surClicSimple } from './lien';
+import { surClicSimple } from './clicSimple';
 import { libelleGenre } from '../domaine/genres';
 import type { ResultatSeance } from '../domaine/resultats';
 import { identifiantSeance } from '../domaine/seance';
@@ -8,7 +8,7 @@ import type { CriteresSortie } from '../domaine/types';
 import { cheminCible } from '../parcours/chemins';
 import { explicationSeance } from '../domaine/explication';
 import { FriseHoraire } from './FriseHoraire';
-import { LIBELLE_STATUT, POINT_GROUPE as POINT, TEXTE_GROUPE as TEXTE } from './statut';
+import { LIBELLE_STATUT, POINT_GROUPE as POINT, TEXTE_GROUPE as TEXTE } from './presentationStatut';
 
 interface Props {
   readonly resultat: ResultatSeance;

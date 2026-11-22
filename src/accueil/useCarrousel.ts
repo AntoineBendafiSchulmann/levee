@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 
-import { useMouvementReduit } from './useMediaQuery';
+import { useReducedMotion } from './useReducedMotion';
 
 /** Ramène un indice dans `[0, nombre - 1]` (0 quand il n'y a aucune diapositive). */
 export function borner(indice: number, nombre: number): number {
@@ -11,7 +11,7 @@ export function borner(indice: number, nombre: number): number {
  * Sélection effective d'après la liste courante des pièces : la pièce choisie si elle y figure (même à une autre
  * position qu'avant), sinon la première pièce disponible (ordre de la liste) ; aucune si la liste est vide.
  */
-export function resoudreSelection(ids: readonly string[], choisie: string | null): { id: string | null; indice: number } {
+export function resoudrePieceActive(ids: readonly string[], choisie: string | null): { id: string | null; indice: number } {
   const position = choisie === null ? -1 : ids.indexOf(choisie);
   const indice = Math.max(0, position);
   return { id: ids[indice] ?? null, indice };
@@ -95,9 +95,9 @@ interface Etat {
  * qu'au montage. Si la pièce choisie disparaît de la liste, la première pièce disponible la remplace.
  */
 export function useCarrousel(ids: readonly string[], lireIdInitial: () => string | null) {
-  const reduire = useMouvementReduit();
-  const [etat, setEtat] = useState<Etat>(() => ({ id: resoudreSelection(ids, lireIdInitial()).id, sens: 1 }));
-  const { id: idActif, indice } = resoudreSelection(ids, etat.id);
+  const reduire = useReducedMotion();
+  const [etat, setEtat] = useState<Etat>(() => ({ id: resoudrePieceActive(ids, lireIdInitial()).id, sens: 1 }));
+  const { id: idActif, indice } = resoudrePieceActive(ids, etat.id);
   if (idActif !== null && idActif !== etat.id) {
     // La pièce choisie n'est plus dans la liste : la première pièce disponible devient la sélection.
     setEtat({ id: idActif, sens: 1 });

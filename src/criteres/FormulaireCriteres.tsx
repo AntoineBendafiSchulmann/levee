@@ -6,7 +6,7 @@ import {
   LIMITE_MAX_MINUTES,
   LIMITE_MIN_MINUTES,
   PAS_HEURE_MINUTES,
-} from '../domaine/criteres';
+} from '../domaine/bornesHoraires';
 import { GENRES } from '../domaine/genres';
 import { libelleJourCourt } from '../domaine/temps';
 import { normaliser } from '../domaine/texte';

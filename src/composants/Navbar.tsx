@@ -1,5 +1,5 @@
-import { ID_SELECTION, type Ecran } from '../parcours/chemins';
-import { surClicSimple } from './lien';
+import { ID_SEANCES_DU_SOIR, type Ecran } from '../parcours/chemins';
+import { surClicSimple } from './clicSimple';
 
 interface Props {
   /** Écran affiché : « À l'affiche » est la page courante sur l'accueil. */
@@ -8,7 +8,7 @@ interface Props {
   readonly date: string;
   /** Logo et « À l'affiche » : en haut de l'accueil, ou retour à l'accueil depuis une autre page. */
   readonly onAccueil: () => void;
-  /** « Séances de la soirée » : la sélection sous l'accueil. */
+  /** « Séances de la soirée » : les séances du soir sous l'accueil. */
   readonly onSeances: () => void;
 }
 
@@ -16,7 +16,7 @@ const CLASSES_LOGO = 'flex min-h-11 items-center font-editorial text-[34px] lead
 const CLASSES_ENTREE =
   'min-h-11 items-center rounded-full px-3.5 text-sm font-semibold text-texte-doux hover:bg-surface-survol hover:text-texte';
 
-export function EnTete({ ecran, date, onAccueil, onSeances }: Props) {
+export function Navbar({ ecran, date, onAccueil, onSeances }: Props) {
   return (
     <header className="flex flex-none items-center justify-between gap-3 border-b border-filet px-4 py-1.5 tablette:px-6 tablette:py-2 bureau:px-8 ultra:px-16 ultra:py-2.5">
       <div className="flex min-w-0 items-baseline gap-4">
@@ -34,7 +34,7 @@ export function EnTete({ ecran, date, onAccueil, onSeances }: Props) {
         >
           À l’affiche
         </a>
-        <a href={`/#${ID_SELECTION}`} className={`${CLASSES_ENTREE} inline-flex`} onClick={surClicSimple(onSeances)}>
+        <a href={`/#${ID_SEANCES_DU_SOIR}`} className={`${CLASSES_ENTREE} inline-flex`} onClick={surClicSimple(onSeances)}>
           <span className="tablette:hidden">Séances</span>
           <span className="hidden tablette:inline">Séances de la soirée</span>
         </a>

@@ -4,7 +4,7 @@ import {
   LIMITE_MAX_MINUTES,
   LIMITE_MIN_MINUTES,
   PAS_HEURE_MINUTES,
-} from '../domaine/criteres';
+} from '../domaine/bornesHoraires';
 import { GENRES } from '../domaine/genres';
 import type { CriteresSortie, JourIso, Origine } from '../domaine/types';
 

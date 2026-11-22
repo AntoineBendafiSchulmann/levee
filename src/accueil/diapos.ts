@@ -18,7 +18,7 @@ import type { AfficheDef, CriteresSortie, JourIso, Salle, Spectacle } from '../d
 export interface SeanceDeLaPiece {
   /** Identifiant exact de la séance (`/seances/:id`). */
   readonly id: string;
-  /** Clé de retour du focus : distincte de celle des cartes de la sélection, qui portent l'identifiant seul. */
+  /** Clé de retour du focus : distincte de celle des cartes des séances du soir, qui portent l'identifiant seul. */
   readonly cle: string;
   readonly heure: string;
   /** Plage de fin calculée, ou `null` quand la durée est inconnue. */

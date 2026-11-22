@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { Affiche } from '../composants/Affiche';
-import { EnTete } from '../composants/EnTete';
+import { Navbar } from '../composants/Navbar';
 import type { OptionsCriteres } from '../criteres/FormulaireCriteres';
 import { libelleGenre } from '../domaine/genres';
 import { joursDisponibles } from '../domaine/programme';
 import { resultatDeSeance } from '../domaine/resultats';
-import { identifiantSeance, resoudreFiche } from '../domaine/seance';
+import { identifiantSeance, resoudrePagePiece } from '../domaine/seance';
 import { formaterDuree, formaterHeure, libelleJourBref, libelleJourLong } from '../domaine/temps';
 import type { CriteresSortie, JourIso, Salle, Spectacle } from '../domaine/types';
 import type { Parcours } from '../parcours/useParcours';
 import { verdictSeance } from '../domaine/explication';
-import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../composants/statut';
+import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../composants/presentationStatut';
 import { CalculHoraire } from './CalculHoraire';
-import { ListeSeances } from './ListeSeances';
+import { ChoixSeance } from './ChoixSeance';
 
 interface Props {
   readonly parcours: Parcours;
@@ -37,36 +37,36 @@ function phraseDurees(spectacle: Spectacle): string {
 }
 
 /**
- * Fiche d'une pièce, avec sa séance choisie. Adresses : `/piece/:id` (séance présélectionnée d'après les
+ * Page d'une pièce (« fiche » dans l'interface), avec sa séance choisie. Adresses : `/piece/:id` (séance présélectionnée d'après les
  * critères) et `/seances/:id` (séance précise). Choisir un autre horaire met l'adresse à jour, pour qu'un
  * rechargement affiche la même séance. La réservation arrive dans un lot suivant : aucun bouton ne
  * la promet ici.
  */
-export function PageFiche({ parcours, aujourdhui, spectacles, salles, options }: Props) {
+export function PagePiece({ parcours, aujourdhui, spectacles, salles, options }: Props) {
   const { criteres, cible } = parcours;
-  const fiche = cible === null ? undefined : resoudreFiche(spectacles, salles, cible, criteres);
+  const pagePiece = cible === null ? undefined : resoudrePagePiece(spectacles, salles, cible, criteres);
 
   return (
     <div className="flex h-dvh flex-col">
-      <EnTete ecran="fiche" date={libelleJourLong(criteres.jour)} onAccueil={parcours.retournerAccueil} onSeances={parcours.allerSelection} />
-      {fiche === undefined ? (
-        <FicheIntrouvable parcours={parcours} />
+      <Navbar ecran="piece" date={libelleJourLong(criteres.jour)} onAccueil={parcours.retournerAccueil} onSeances={parcours.allerSeancesDuSoir} />
+      {pagePiece === undefined ? (
+        <PieceIntrouvable parcours={parcours} />
       ) : (
         // La clé remet à zéro l'onglet de jour quand on passe à une autre pièce.
-        <FicheOuverte
-          key={fiche.spectacle.id}
+        <PieceOuverte
+          key={pagePiece.spectacle.id}
           parcours={parcours}
           criteres={criteres}
           aujourdhui={aujourdhui}
           options={options}
-          fiche={fiche}
+          pagePiece={pagePiece}
         />
       )}
     </div>
   );
 }
 
-function FicheIntrouvable({ parcours }: { readonly parcours: Parcours }) {
+function PieceIntrouvable({ parcours }: { readonly parcours: Parcours }) {
   const titre = useRef<HTMLHeadingElement>(null);
   const focaliser = parcours.naviguee;
   useEffect(() => {
@@ -98,11 +98,11 @@ interface OuverteProps {
   readonly criteres: CriteresSortie;
   readonly aujourdhui: JourIso;
   readonly options: OptionsCriteres;
-  readonly fiche: NonNullable<ReturnType<typeof resoudreFiche>>;
+  readonly pagePiece: NonNullable<ReturnType<typeof resoudrePagePiece>>;
 }
 
-function FicheOuverte({ parcours, criteres, aujourdhui, options, fiche }: OuverteProps) {
-  const { spectacle, salle, seance } = fiche;
+function PieceOuverte({ parcours, criteres, aujourdhui, options, pagePiece }: OuverteProps) {
+  const { spectacle, salle, seance } = pagePiece;
   const titre = useRef<HTMLHeadingElement>(null);
   const focaliser = parcours.naviguee;
   const [jourChoisi, setJourChoisi] = useState<JourIso | null>(null);
@@ -126,7 +126,7 @@ function FicheOuverte({ parcours, criteres, aujourdhui, options, fiche }: Ouvert
       const r = resultatDeSeance(spectacle, salle, s, criteres);
       return { identifiant: r.id, seance: s, evaluation: r.evaluation };
     });
-  const versResultats = parcours.origineFiche === 'resultats';
+  const versResultats = parcours.provenancePiece === 'resultats';
 
   return (
     <>
@@ -135,7 +135,7 @@ function FicheOuverte({ parcours, criteres, aujourdhui, options, fiche }: Ouvert
           <button
             type="button"
             aria-label={versResultats ? 'Retour aux résultats' : 'Retour à l’accueil'}
-            onClick={parcours.retournerDeFiche}
+            onClick={parcours.retournerDePiece}
             className="min-h-11 self-start rounded-full border border-filet py-0 pr-4 pl-3 text-sm font-semibold hover:bg-surface-survol"
           >
             <span aria-hidden="true">←</span> {versResultats ? 'Résultats' : 'Accueil'}
@@ -173,7 +173,7 @@ function FicheOuverte({ parcours, criteres, aujourdhui, options, fiche }: Ouvert
                   Depuis {origine} à {formaterHeure(criteres.departMinutes)} · sorti avant {formaterHeure(criteres.limiteMinutes)}
                 </p>
               </div>
-              <ListeSeances
+              <ChoixSeance
                 jours={jours}
                 jourAffiche={jourAffiche}
                 aujourdhui={aujourdhui}

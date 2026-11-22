@@ -14,17 +14,19 @@ Navigateur ──► http://localhost:5173  (Vite)
 ```
 server/Levee.Api/               API ASP.NET Core (BFF) appelée par le client
 src/                            Client React + Vite (index.html, package.json et configurations à la racine)
-  composants/                   Composants partagés entre plusieurs fonctionnalités : en-tête et navigation (EnTete),
+  composants/                   Composants partagés entre plusieurs fonctionnalités : navigation principale (Navbar),
                                 affiche (Affiche), carte de séance (CarteSeance) et sa frise (FriseHoraire), libellés
-                                et couleurs de statut (statut.ts), gestion du clic sur un lien (lien.ts)
+                                et couleurs de statut (presentationStatut.ts), gestion du clic simple sur un lien (clicSimple.ts)
   accueil/                      Page d'accueil et ses composants propres : pièce à l'affiche et ses voisines
-                                (CarrouselAffiches, useCarrousel, useMediaQuery), séances sous l'affiche, sélection de séances
+                                (CarrouselAffiches, useCarrousel, useReducedMotion, useDesktopBreakpoint), séances sous
+                                l'affiche, séances du soir (SeancesDuSoir pour l'affichage, selectionnerSeancesDuSoir pour le choix)
   resultats/                    Page des résultats (liste complète, filtres, compteurs)
-  fiche/                        Page d'une pièce et ses composants propres : séances par jour, verdict, trajet et calcul
+  piece/                        Page d'une pièce (PagePiece) et ses composants propres : choix du jour et de l'horaire
+                                (ChoixSeance), verdict, trajet et calcul horaire (CalculHoraire)
   criteres/                     Critères de la sortie : formulaire et feuille qui le contient
-  parcours/                     Navigation : adresses, écran, critères conservés, défilement, focus de retour
-  domaine/                      Types et fonctions pures (évaluation, résultats, temps, textes d'explication) et leurs tests
-  donnees-demo/                 DONNÉES FICTIVES de démonstration, importées par App.tsx seul
+  parcours/                     Navigation : adresses, écran, critères conservés (stockageCriteres), défilement, focus de retour
+  domaine/                      Types et fonctions pures (évaluation, résultats, temps, bornes horaires, textes d'explication) et leurs tests
+  donnees-demo/                 DONNÉES FICTIVES de démonstration, importées par App.tsx côté application et par les tests
   technique/                    Contrôle technique de l'API, servi sur /technique
 ```
 

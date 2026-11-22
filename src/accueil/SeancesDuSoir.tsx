@@ -1,14 +1,14 @@
 import type { Ref } from 'react';
 
-import { surClicSimple } from '../composants/lien';
+import { surClicSimple } from '../composants/clicSimple';
 import { libelleCompteurs, type Resultats, type ResultatSeance } from '../domaine/resultats';
 import { formaterHeure } from '../domaine/temps';
 import type { CriteresSortie } from '../domaine/types';
-import { ID_SELECTION } from '../parcours/chemins';
+import { ID_SEANCES_DU_SOIR } from '../parcours/chemins';
 import { CarteSeance } from '../composants/CarteSeance';
 
 interface Props {
-  readonly selection: readonly ResultatSeance[];
+  readonly seances: readonly ResultatSeance[];
   readonly resultats: Resultats;
   readonly criteres: CriteresSortie;
   readonly origineLibelle: string;
@@ -28,11 +28,11 @@ const BOUTON =
  * Sous l'accueil : au plus trois séances qui rentrent dans la soirée, tirées des résultats déjà calculés.
  * La liste complète, avec filtres et compteurs, reste sur `/seances`.
  */
-export function SelectionSeances({ selection, resultats, criteres, origineLibelle, onOuvrir, onTous, onModifier, refSection, refTitre }: Props) {
+export function SeancesDuSoir({ seances, resultats, criteres, origineLibelle, onOuvrir, onTous, onModifier, refSection, refTitre }: Props) {
   return (
     <section
       ref={refSection}
-      id={ID_SELECTION}
+      id={ID_SEANCES_DU_SOIR}
       aria-labelledby="titre-seances-du-soir"
       className="border-t border-filet px-4 pt-10 pb-14 tablette:px-8 bureau:px-0 ultra:pt-16 ultra:pb-24"
     >
@@ -66,13 +66,13 @@ export function SelectionSeances({ selection, resultats, criteres, origineLibell
           </div>
         </div>
 
-        {selection.length === 0 ? (
+        {seances.length === 0 ? (
           <p className="rounded-md border border-dashed border-contour px-5 py-7 text-center font-editorial text-[26px] italic">
             Aucune séance ne rentre dans cette soirée.
           </p>
         ) : (
           <ul className="grid grid-cols-1 items-start gap-3 tablette:grid-cols-2 bureau:grid-cols-3 ultra:gap-5">
-            {selection.map((resultat) => (
+            {seances.map((resultat) => (
               <li key={resultat.id}>
                 <CarteSeance resultat={resultat} criteres={criteres} origineLibelle={origineLibelle} onOuvrir={onOuvrir} />
               </li>

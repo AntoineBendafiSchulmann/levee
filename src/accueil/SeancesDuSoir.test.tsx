@@ -6,15 +6,15 @@ import { DEMO_SALLES } from '../donnees-demo/salles.demo';
 import { DEMO_SPECTACLES } from '../donnees-demo/spectacles.demo';
 import { construireResultats } from '../domaine/resultats';
 import type { CriteresSortie, Spectacle } from '../domaine/types';
-import { selectionSoiree } from './selection';
-import { SelectionSeances } from './SelectionSeances';
+import { selectionnerSeancesDuSoir } from './selectionnerSeancesDuSoir';
+import { SeancesDuSoir } from './SeancesDuSoir';
 
 function rendu(surcharge: Partial<CriteresSortie> = {}, spectacles: readonly Spectacle[] = DEMO_SPECTACLES): string {
   const criteres: CriteresSortie = { ...DEMO_CRITERES_INITIAUX, ...surcharge };
   const resultats = construireResultats(spectacles, DEMO_SALLES, criteres);
   return renderToStaticMarkup(
-    <SelectionSeances
-      selection={selectionSoiree(resultats)}
+    <SeancesDuSoir
+      seances={selectionnerSeancesDuSoir(resultats)}
       resultats={resultats}
       criteres={criteres}
       origineLibelle="République"
@@ -27,7 +27,7 @@ function rendu(surcharge: Partial<CriteresSortie> = {}, spectacles: readonly Spe
   );
 }
 
-describe('sélection de séances sous l’accueil : rendu réel', () => {
+describe('séances du soir sous l’accueil : rendu réel', () => {
   it('trois cartes, chacune un lien vers l’identifiant exact de sa séance', () => {
     const html = rendu();
     expect(html.match(/<li>/g)).toHaveLength(3);
@@ -53,13 +53,13 @@ describe('sélection de séances sous l’accueil : rendu réel', () => {
     expect(html).toContain('href="/seances"');
   });
 
-  it('« Voir tous les résultats » mène à la liste complète, et le titre porte l’ancre de la sélection', () => {
+  it('« Voir tous les résultats » mène à la liste complète, et le titre porte l’ancre des séances du soir', () => {
     const html = rendu();
     expect(html).toMatch(/<a[^>]*href="\/seances"[^>]*>Voir tous les résultats/);
     expect(html).toContain('id="seances-du-soir"');
   });
 
-  it('rappelle les compteurs de tous les résultats, pas seulement ceux de la sélection', () => {
+  it('rappelle les compteurs de tous les résultats, pas seulement ceux des séances du soir', () => {
     expect(rendu()).toContain('4 possibles · 1 à vérifier · 1 impossible · depuis République à 18h30, sorti avant 22h00');
   });
 });

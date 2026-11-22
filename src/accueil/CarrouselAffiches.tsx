@@ -1,19 +1,19 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, type MouseEvent, type ReactNode } from 'react';
 
-import { surClicSimple } from '../composants/lien';
+import { surClicSimple } from '../composants/clicSimple';
 import { cheminCible } from '../parcours/chemins';
-import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../composants/statut';
+import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../composants/presentationStatut';
 import { Affiche } from '../composants/Affiche';
 import type { DiapoAffiche } from './diapos';
 import { indiceDepuisDefilement, useCarrousel, voisins } from './useCarrousel';
-import { useBureau } from './useMediaQuery';
+import { useDesktopBreakpoint } from './useDesktopBreakpoint';
 
 interface Props {
   readonly diapos: readonly DiapoAffiche[];
   /** Pièce active au montage (retour sur l'accueil) ; lue une seule fois. */
   readonly lireIdInitial: () => string | null;
   /** Appelée à chaque changement de pièce active, pour la mémoriser. */
-  readonly onAffiche: (id: string) => void;
+  readonly onPieceActive: (id: string) => void;
   /** Ouvre la fiche de la pièce. */
   readonly onOuvrirPiece: (diapo: DiapoAffiche) => void;
   /** Ouvre la fiche d'une séance précise ; `cle` désigne l'élément qui retrouvera le focus au retour. */
@@ -48,14 +48,14 @@ const deuxChiffres = (n: number) => String(n).padStart(2, '0');
 export function CarrouselAffiches({
   diapos,
   lireIdInitial,
-  onAffiche,
+  onPieceActive,
   onOuvrirPiece,
   onOuvrirSeance,
   introduction,
   actions,
   rappelCriteres,
 }: Props) {
-  const bureau = useBureau();
+  const bureau = useDesktopBreakpoint();
   const ids = diapos.map((diapo) => diapo.id);
   const {
     indice,
@@ -94,9 +94,9 @@ export function CarrouselAffiches({
 
   useEffect(() => {
     if (idActif !== null) {
-      onAffiche(idActif);
+      onPieceActive(idActif);
     }
-  }, [idActif, onAffiche]);
+  }, [idActif, onPieceActive]);
 
   // Au passage sous 1100 px, au montage, ou quand la liste change (critères), le défileur retrouve la sélection
   // courante : celle-ci suit la pièce, pas l'indice, donc la même pièce reste centrée si elle change de position.

@@ -5,7 +5,7 @@ import { DEMO_ORIGINES } from '../donnees-demo/origines.demo';
 import { DEMO_SPECTACLES } from '../donnees-demo/spectacles.demo';
 import { joursDisponibles } from '../domaine/programme';
 import type { CriteresSortie } from '../domaine/types';
-import { CLE_CRITERES, criteresValides, ecrireCriteres, lireCriteres, type Stockage } from './memoireCriteres';
+import { CLE_CRITERES, criteresValides, ecrireCriteres, lireCriteres, type Stockage } from './stockageCriteres';
 
 const CONTRAINTES = { jours: joursDisponibles(DEMO_SPECTACLES), origines: DEMO_ORIGINES };
 const SAISIS: CriteresSortie = {

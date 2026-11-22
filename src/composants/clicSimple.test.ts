@@ -1,7 +1,7 @@
 import type { MouseEvent } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { estClicSimple, surClicSimple } from './lien';
+import { estClicSimple, surClicSimple } from './clicSimple';
 
 function clic(surcharge: Partial<Pick<MouseEvent, 'button' | 'metaKey' | 'ctrlKey' | 'shiftKey' | 'altKey'>> = {}) {
   const preventDefault = vi.fn();

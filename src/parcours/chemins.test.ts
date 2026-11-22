@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { analyserChemin, ancreDepuisAdresse, cheminCible, ID_SELECTION, origineParDefaut } from './chemins';
+import { analyserChemin, ancreDepuisUrl, cheminCible, ID_SEANCES_DU_SOIR, provenanceParDefaut } from './chemins';
 
 describe('adresses du parcours', () => {
   it('reconnaît l’accueil, les résultats et les fiches', () => {
     expect(analyserChemin('/')).toEqual({ ecran: 'accueil', cible: null });
     expect(analyserChemin('/seances')).toEqual({ ecran: 'resultats', cible: null });
     expect(analyserChemin('/seances/')).toEqual({ ecran: 'resultats', cible: null });
-    expect(analyserChemin('/piece/jeu-amour-hasard')).toEqual({ ecran: 'fiche', cible: { type: 'piece', id: 'jeu-amour-hasard' } });
+    expect(analyserChemin('/piece/jeu-amour-hasard')).toEqual({ ecran: 'piece', cible: { type: 'piece', id: 'jeu-amour-hasard' } });
     expect(analyserChemin('/seances/jeu-amour-hasard-2026-11-28-1200')).toEqual({
-      ecran: 'fiche',
+      ecran: 'piece',
       cible: { type: 'seance', id: 'jeu-amour-hasard-2026-11-28-1200' },
     });
   });
@@ -27,21 +27,21 @@ describe('adresses du parcours', () => {
   });
 
   it('une fiche ouverte directement revient à l’écran naturel : séance → résultats, pièce → accueil', () => {
-    expect(origineParDefaut(analyserChemin('/seances/x'))).toBe('resultats');
-    expect(origineParDefaut(analyserChemin('/piece/x'))).toBe('accueil');
+    expect(provenanceParDefaut(analyserChemin('/seances/x'))).toBe('resultats');
+    expect(provenanceParDefaut(analyserChemin('/piece/x'))).toBe('accueil');
   });
 });
 
-describe('ancre de la sélection de séances', () => {
-  it('l’adresse /#seances-du-soir de l’en-tête demande la sélection, et seulement sur l’accueil', () => {
-    expect(ID_SELECTION).toBe('seances-du-soir');
-    expect(ancreDepuisAdresse('/', '#seances-du-soir')).toBe('selection');
-    expect(ancreDepuisAdresse('/seances', '#seances-du-soir')).toBeNull();
-    expect(ancreDepuisAdresse('/piece/avare', '#seances-du-soir')).toBeNull();
+describe('ancre des séances du soir', () => {
+  it('l’adresse /#seances-du-soir de l’en-tête demande les séances du soir, et seulement sur l’accueil', () => {
+    expect(ID_SEANCES_DU_SOIR).toBe('seances-du-soir');
+    expect(ancreDepuisUrl('/', '#seances-du-soir')).toBe('seances-du-soir');
+    expect(ancreDepuisUrl('/seances', '#seances-du-soir')).toBeNull();
+    expect(ancreDepuisUrl('/piece/avare', '#seances-du-soir')).toBeNull();
   });
 
   it('sans ancre, ou avec une autre ancre : rien à faire', () => {
-    expect(ancreDepuisAdresse('/', '')).toBeNull();
-    expect(ancreDepuisAdresse('/', '#autre')).toBeNull();
+    expect(ancreDepuisUrl('/', '')).toBeNull();
+    expect(ancreDepuisUrl('/', '#autre')).toBeNull();
   });
 });

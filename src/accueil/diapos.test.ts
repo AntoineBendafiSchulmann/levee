@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DEMO_AUJOURDHUI, DEMO_CRITERES_INITIAUX } from '../donnees-demo/criteres.demo';
 import { DEMO_SALLES } from '../donnees-demo/salles.demo';
 import { DEMO_SPECTACLES } from '../donnees-demo/spectacles.demo';
-import { choisirSeance, identifiantSeance, resoudreFiche, trouverSalle } from '../domaine/seance';
+import { choisirSeance, identifiantSeance, resoudrePagePiece, trouverSalle } from '../domaine/seance';
 import { formaterHeure, libelleJourCourt } from '../domaine/temps';
 import type { CriteresSortie } from '../domaine/types';
 import { construireDiapos } from './diapos';
@@ -30,10 +30,10 @@ describe('affiches de l’accueil', () => {
       for (const departMinutes of [840, 960, 1110, 1260]) {
         const c = criteres({ jour, departMinutes });
         for (const diapo of construireDiapos(DEMO_SPECTACLES, DEMO_SALLES, c, DEMO_AUJOURDHUI)) {
-          const fiche = resoudreFiche(DEMO_SPECTACLES, DEMO_SALLES, { type: 'piece', id: diapo.id }, c);
-          expect(fiche).toBeDefined();
+          const pagePiece = resoudrePagePiece(DEMO_SPECTACLES, DEMO_SALLES, { type: 'piece', id: diapo.id }, c);
+          expect(pagePiece).toBeDefined();
           expect(diapo.legende).toBe(
-            `${libelleJourCourt(fiche?.seance.jour ?? '', DEMO_AUJOURDHUI)} · ${formaterHeure(fiche?.seance.debutMinutes ?? 0)}`,
+            `${libelleJourCourt(pagePiece?.seance.jour ?? '', DEMO_AUJOURDHUI)} · ${formaterHeure(pagePiece?.seance.debutMinutes ?? 0)}`,
           );
         }
       }

@@ -63,22 +63,22 @@ export function choisirSeance(spectacle: Spectacle, salle: Salle, criteres: Crit
   );
 }
 
-export interface FicheResolue {
+export interface PagePieceResolue {
   readonly spectacle: Spectacle;
   readonly salle: Salle;
   readonly seance: Seance;
 }
 
 /** Une adresse de fiche : soit une pièce (séance à présélectionner), soit une séance précise. */
-export type CibleFiche = { readonly type: 'piece' | 'seance'; readonly id: string };
+export type CiblePagePiece = { readonly type: 'piece' | 'seance'; readonly id: string };
 
 /** Résout l'adresse d'une fiche ; `undefined` si la pièce ou la séance n'existe pas. */
-export function resoudreFiche(
+export function resoudrePagePiece(
   spectacles: readonly Spectacle[],
   salles: readonly Salle[],
-  cible: CibleFiche,
+  cible: CiblePagePiece,
   criteres: CriteresSortie,
-): FicheResolue | undefined {
+): PagePieceResolue | undefined {
   if (cible.type === 'seance') {
     const trouvee = trouverSeance(spectacles, cible.id);
     return trouvee === undefined ? undefined : { ...trouvee, salle: trouverSalle(salles, trouvee.spectacle) };

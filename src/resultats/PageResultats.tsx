@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
-import { EnTete } from '../composants/EnTete';
+import { Navbar } from '../composants/Navbar';
 import { FeuilleCriteres } from '../criteres/FeuilleCriteres';
 import { FormulaireCriteres, type OptionsCriteres } from '../criteres/FormulaireCriteres';
 import { ReglageHeure } from '../criteres/ReglageHeure';
-import { LIMITE_MAX_MINUTES, LIMITE_MIN_MINUTES, PAS_HEURE_MINUTES } from '../domaine/criteres';
+import { LIMITE_MAX_MINUTES, LIMITE_MIN_MINUTES, PAS_HEURE_MINUTES } from '../domaine/bornesHoraires';
 import { libelleGenre } from '../domaine/genres';
 import { libelleBoutonVoir, libelleCompteurs, type Resultats } from '../domaine/resultats';
 import { formaterHeure, libelleJourCourt, libelleJourLong } from '../domaine/temps';
@@ -75,7 +75,7 @@ export function PageResultats({ parcours, aujourdhui, options, resultats }: Prop
 
   return (
     <div className="flex h-dvh flex-col">
-      <EnTete ecran="resultats" date={libelleJourLong(criteres.jour)} onAccueil={parcours.retournerAccueil} onSeances={parcours.allerSelection} />
+      <Navbar ecran="resultats" date={libelleJourLong(criteres.jour)} onAccueil={parcours.retournerAccueil} onSeances={parcours.allerSeancesDuSoir} />
 
       <div className="flex min-h-0 flex-1 bureau:grid bureau:grid-cols-[372px_minmax(0,1fr)]">
         <aside
@@ -187,7 +187,7 @@ export function PageResultats({ parcours, aujourdhui, options, resultats }: Prop
                       criteres={criteres}
                       origineLibelle={origine}
                       onOuvrir={(identifiant) => {
-                        parcours.ouvrirFiche({ type: 'seance', id: identifiant }, 'resultats', identifiant);
+                        parcours.ouvrirPiece({ type: 'seance', id: identifiant }, 'resultats', identifiant);
                       }}
                     />
                   </li>

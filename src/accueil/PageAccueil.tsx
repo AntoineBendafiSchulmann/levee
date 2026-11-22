@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
-import { EnTete } from '../composants/EnTete';
+import { Navbar } from '../composants/Navbar';
 import { FeuilleCriteres } from '../criteres/FeuilleCriteres';
 import { FormulaireCriteres, type OptionsCriteres } from '../criteres/FormulaireCriteres';
 import { libelleBoutonVoir, libelleCompteurs, type Resultats } from '../domaine/resultats';
@@ -11,9 +11,9 @@ import type { Parcours } from '../parcours/useParcours';
 import { ActionsAccueil } from './ActionsAccueil';
 import { CarrouselAffiches } from './CarrouselAffiches';
 import { construireDiapos } from './diapos';
-import { selectionSoiree } from './selection';
-import { SelectionSeances } from './SelectionSeances';
-import { useMouvementReduit } from './useMediaQuery';
+import { selectionnerSeancesDuSoir } from './selectionnerSeancesDuSoir';
+import { SeancesDuSoir } from './SeancesDuSoir';
+import { useReducedMotion } from './useReducedMotion';
 
 interface Props {
   readonly parcours: Parcours;
@@ -32,24 +32,24 @@ interface Props {
  * séance ouvre la fiche. La page défile dans son conteneur : sa position est mémorisée pour le retour.
  */
 export function PageAccueil({ parcours, aujourdhui, spectacles, salles, options, resultats }: Props) {
-  const { criteres, cleRetour, lirePosition, memoriserPosition, lireAfficheActive, memoriserAfficheActive, consommerAncre } = parcours;
-  const reduire = useMouvementReduit();
+  const { criteres, cleRetour, lirePosition, memoriserPosition, lirePieceActive, memoriserPieceActive, consommerAncre } = parcours;
+  const reduire = useReducedMotion();
   const defileur = useRef<HTMLElement>(null);
   const titre = useRef<HTMLHeadingElement>(null);
   const section = useRef<HTMLElement>(null);
-  const titreSelection = useRef<HTMLHeadingElement>(null);
-  /** « selection » quand on arrive par « Séances de la soirée » depuis une autre page. */
-  const ancre = useRef<'selection' | null>(null);
+  const titreSeancesDuSoir = useRef<HTMLHeadingElement>(null);
+  /** « seances-du-soir » quand on arrive par « Séances de la soirée » depuis une autre page. */
+  const ancre = useRef<'seances-du-soir' | null>(null);
   const focaliser = parcours.naviguee;
   const diapos = construireDiapos(spectacles, salles, criteres, aujourdhui);
-  const selection = selectionSoiree(resultats);
+  const seancesDuSoir = selectionnerSeancesDuSoir(resultats);
   const quand = libelleJourDu(criteres.jour, aujourdhui);
   const origine = options.origines.find((o) => o.id === criteres.origine)?.libelle ?? criteres.origine;
-  const onAffiche = useCallback(
+  const onPieceActive = useCallback(
     (id: string) => {
-      memoriserAfficheActive(id);
+      memoriserPieceActive(id);
     },
-    [memoriserAfficheActive],
+    [memoriserPieceActive],
   );
 
   // Position de lecture : en haut, sous « Séances de la soirée » depuis une autre page, ou celle du retour.
@@ -59,17 +59,17 @@ export function PageAccueil({ parcours, aujourdhui, spectacles, salles, options,
       return;
     }
     ancre.current = consommerAncre() ?? ancre.current;
-    page.scrollTop = ancre.current === 'selection' ? (section.current?.offsetTop ?? 0) : lirePosition('accueil');
+    page.scrollTop = ancre.current === 'seances-du-soir' ? (section.current?.offsetTop ?? 0) : lirePosition('accueil');
   }, [consommerAncre, lirePosition]);
 
   // Après une navigation, le focus passe au titre de la page ; au retour d'une fiche, il revient sur l'élément
-  // d'où l'on est parti (affiche active, séance sous l'affiche ou carte de la sélection), ramené en vue.
+  // d'où l'on est parti (affiche active, séance sous l'affiche ou carte des séances du soir), ramené en vue.
   useEffect(() => {
     if (!focaliser) {
       return;
     }
-    if (ancre.current === 'selection') {
-      titreSelection.current?.focus({ preventScroll: true });
+    if (ancre.current === 'seances-du-soir') {
+      titreSeancesDuSoir.current?.focus({ preventScroll: true });
       return;
     }
     const element = cleRetour === null ? null : focaliserCle(cleRetour);
@@ -85,14 +85,14 @@ export function PageAccueil({ parcours, aujourdhui, spectacles, salles, options,
     defileur.current?.scrollTo({ top: 0, behavior: comportement });
     titre.current?.focus({ preventScroll: true });
   };
-  const versSelection = () => {
+  const versSeancesDuSoir = () => {
     defileur.current?.scrollTo({ top: section.current?.offsetTop ?? 0, behavior: comportement });
-    titreSelection.current?.focus({ preventScroll: true });
+    titreSeancesDuSoir.current?.focus({ preventScroll: true });
   };
 
   return (
     <div className="flex h-dvh flex-col">
-      <EnTete ecran="accueil" date={libelleJourLong(criteres.jour)} onAccueil={remonter} onSeances={versSelection} />
+      <Navbar ecran="accueil" date={libelleJourLong(criteres.jour)} onAccueil={remonter} onSeances={versSeancesDuSoir} />
 
       <main
         ref={defileur}
@@ -103,13 +103,13 @@ export function PageAccueil({ parcours, aujourdhui, spectacles, salles, options,
       >
         <CarrouselAffiches
           diapos={diapos}
-          lireIdInitial={() => (cleRetour !== null && diapos.some((d) => d.id === cleRetour) ? cleRetour : lireAfficheActive())}
-          onAffiche={onAffiche}
+          lireIdInitial={() => (cleRetour !== null && diapos.some((d) => d.id === cleRetour) ? cleRetour : lirePieceActive())}
+          onPieceActive={onPieceActive}
           onOuvrirPiece={(diapo) => {
-            parcours.ouvrirFiche({ type: 'piece', id: diapo.id }, 'accueil', diapo.id);
+            parcours.ouvrirPiece({ type: 'piece', id: diapo.id }, 'accueil', diapo.id);
           }}
           onOuvrirSeance={(identifiant, cle) => {
-            parcours.ouvrirFiche({ type: 'seance', id: identifiant }, 'accueil', cle);
+            parcours.ouvrirPiece({ type: 'seance', id: identifiant }, 'accueil', cle);
           }}
           rappelCriteres={`Depuis ${origine} à ${formaterHeure(criteres.departMinutes)}`}
           introduction={
@@ -141,18 +141,18 @@ export function PageAccueil({ parcours, aujourdhui, spectacles, salles, options,
           }
         />
 
-        <SelectionSeances
-          selection={selection}
+        <SeancesDuSoir
+          seances={seancesDuSoir}
           resultats={resultats}
           criteres={criteres}
           origineLibelle={origine}
           onOuvrir={(identifiant) => {
-            parcours.ouvrirFiche({ type: 'seance', id: identifiant }, 'accueil', identifiant);
+            parcours.ouvrirPiece({ type: 'seance', id: identifiant }, 'accueil', identifiant);
           }}
           onTous={parcours.voirSeances}
           onModifier={parcours.ouvrirFeuille}
           refSection={section}
-          refTitre={titreSelection}
+          refTitre={titreSeancesDuSoir}
         />
       </main>
 
