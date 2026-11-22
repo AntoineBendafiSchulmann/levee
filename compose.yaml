@@ -1,0 +1,23 @@
+# Base PostgreSQL de développement local. Les identifiants viennent du fichier .env, non suivi par Git.
+name: levee-reserves
+
+services:
+  postgres:
+    image: postgres:18.7
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:55433:5432'
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB est requis}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER est requis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD est requis}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

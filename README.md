@@ -25,12 +25,40 @@ Le domaine n'est pas encore exposé par l'API : ses règles ne sont joignables q
   tout SDK 10.0.x installé convient (le plus récent est retenu), jamais une autre version majeure
   ou mineure. Vérifié avec le SDK 10.0.115.
 - Node.js 24 et npm. Vérifié avec Node 24.22.3 et npm 11.19.1.
+- Docker Engine et son extension Compose, pour la base de développement. Vérifié avec Docker
+  29.10.0 et Compose 5.8.0.
 
 ## Installation
 
 ```
 npm --prefix src/client ci
 ```
+
+## Base de données de développement
+
+`compose.yaml` décrit une base PostgreSQL 18.7 réservée au développement local : elle n'écoute que
+sur `127.0.0.1:55433` et ses identifiants viennent d'un fichier `.env`, non suivi par Git.
+L'application ne s'y connecte pas encore.
+
+Sur un nouveau poste, depuis la racine, créer le `.env` à partir du modèle avec un mot de passe
+généré, sans l'afficher. La commande peut être relancée : un `.env` existant n'est jamais modifié.
+
+```
+[ -e .env ] || (umask 077 && sed "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$(openssl rand -hex 16)/" .env.example > .env)
+```
+
+Démarrer la base, vérifier sa disponibilité, puis l'arrêter en conservant les données (préfixer
+par `sudo` si le compte n'appartient pas au groupe `docker`) :
+
+```
+docker compose up -d --wait                    # rend la main quand la base est prête
+docker compose ps                              # état attendu : healthy
+docker compose stop                            # arrêt, données conservées
+```
+
+Les données vivent dans le volume `levee-reserves_pgdata`. `docker compose down` le conserve aussi ;
+seul `docker compose down -v` le supprime. Le mot de passe est fixé à la création du volume : le
+changer ensuite dans `.env` ne modifie pas une base existante.
 
 ## Lancement
 
@@ -70,5 +98,5 @@ Dans le navigateur :
 
 ## Hors périmètre à ce stade
 
-Authentification et droits d'accès, base de données, stockage des photos, exposition du cycle de vie
-par l'API et écrans du parcours, service du build React par ASP.NET Core et publication.
+Authentification et droits d'accès, persistance en base, stockage des photos, exposition du cycle
+de vie par l'API et écrans du parcours, service du build React par ASP.NET Core et publication.

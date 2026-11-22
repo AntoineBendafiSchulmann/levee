@@ -5,3 +5,6 @@ obj/
 # Client
 node_modules/
 src/client/dist/
+
+# Configuration locale
+.env
