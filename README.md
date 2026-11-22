@@ -11,13 +11,9 @@ Navigateur ──► http://localhost:5173  (Vite)
 ## Structure
 
 ```
-src/LeveeReserves.Api/             API ASP.NET Core appelée par le client
-src/LeveeReserves.Domain/          Règles métier : cycle de vie d'une réserve, sans dépendance
-src/client/                        Client React + Vite
-tests/LeveeReserves.Domain.Tests/  Tests xUnit des règles métier
+src/LeveeReserves.Api/   API ASP.NET Core appelée par le client
+src/client/              Client React + Vite
 ```
-
-Le domaine n'est pas encore exposé par l'API : ses règles ne sont joignables que par les tests.
 
 ## Prérequis
 
@@ -76,7 +72,6 @@ le service, l'environnement et un horodatage UTC.
 
 ```
 dotnet build LeveeReserves.slnx
-dotnet test LeveeReserves.slnx                 # règles métier du domaine
 npm --prefix src/client run lint
 npm --prefix src/client run typecheck
 npm --prefix src/client run build              # sortie dans src/client/dist/, ignorée par Git

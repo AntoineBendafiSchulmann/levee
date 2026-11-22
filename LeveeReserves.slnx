@@ -1,9 +1,5 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/LeveeReserves.Api/LeveeReserves.Api.csproj" />
-    <Project Path="src/LeveeReserves.Domain/LeveeReserves.Domain.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/LeveeReserves.Domain.Tests/LeveeReserves.Domain.Tests.csproj" />
   </Folder>
 </Solution>
