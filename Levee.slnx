@@ -1,5 +1,5 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/Levee.Api/Levee.Api.csproj" />
+  <Folder Name="/server/">
+    <Project Path="server/Levee.Api/Levee.Api.csproj" />
   </Folder>
 </Solution>

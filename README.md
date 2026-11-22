@@ -12,16 +12,16 @@ Navigateur ──► http://localhost:5173  (Vite)
 ## Structure
 
 ```
-src/Levee.Api/                  API ASP.NET Core appelée par le client
-src/client/                     Client React + Vite
-  src/accueil/                  Accueil : page, carrousel d'affiches, affiche, actions
-  src/criteres/                 Formulaire de critères et feuille qui le contient
-  src/resultats/                Page des résultats, carte d'une séance, frise horaire
-  src/parcours/                 État de navigation (écran, critères, positions de défilement)
-  src/commun/                   Éléments partagés (en-tête)
-  src/domaine/                  Types et fonctions pures : évaluation d'une séance, résultats, temps (+ tests)
-  src/donnees-demo/             DONNÉES FICTIVES de démonstration, importées par App.tsx seul
-  src/technique/                Contrôle technique de l'API, servi sur /technique
+server/Levee.Api/               API ASP.NET Core (BFF) appelée par le client
+src/                            Client React + Vite (index.html, package.json et configurations à la racine)
+  accueil/                      Accueil : page, carrousel d'affiches, affiche, actions
+  criteres/                     Formulaire de critères et feuille qui le contient
+  resultats/                    Page des résultats, carte d'une séance, frise horaire
+  parcours/                     État de navigation (écran, critères, positions de défilement)
+  commun/                       Éléments partagés (en-tête)
+  domaine/                      Types et fonctions pures : évaluation d'une séance, résultats, temps (+ tests)
+  donnees-demo/                 DONNÉES FICTIVES de démonstration, importées par App.tsx seul
+  technique/                    Contrôle technique de l'API, servi sur /technique
 ```
 
 ## Prérequis
@@ -36,7 +36,7 @@ src/client/                     Client React + Vite
 ## Installation
 
 ```
-npm --prefix src/client ci
+npm ci
 ```
 
 ## Base de données de développement
@@ -70,8 +70,8 @@ changer ensuite dans `.env` ne modifie pas une base existante.
 Dans deux terminaux, depuis la racine :
 
 ```
-dotnet run --project src/Levee.Api             # http://localhost:5080
-npm --prefix src/client run dev                # http://localhost:5173
+dotnet run --project server/Levee.Api          # http://localhost:5080
+npm run dev                                    # http://localhost:5173
 ```
 
 Ouvrir `http://localhost:5173/` : l'accueil. Ouvrir `http://localhost:5173/technique` : le contrôle
@@ -82,10 +82,10 @@ et un horodatage UTC.
 
 ```
 dotnet build Levee.slnx
-npm --prefix src/client run lint
-npm --prefix src/client run typecheck
-npm --prefix src/client test                   # tests unitaires du domaine (Vitest)
-npm --prefix src/client run build              # sortie dans src/client/dist/, ignorée par Git
+npm run lint
+npm run typecheck
+npm test                                       # tests unitaires du domaine (Vitest)
+npm run build                                  # sortie dans dist/, ignorée par Git
 ```
 
 Serveurs lancés :

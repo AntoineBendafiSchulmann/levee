@@ -4,7 +4,7 @@ obj/
 
 # Client
 node_modules/
-src/client/dist/
+/dist/
 
 # Configuration locale
 .env
