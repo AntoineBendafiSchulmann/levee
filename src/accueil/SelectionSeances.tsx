@@ -1,11 +1,11 @@
 import type { Ref } from 'react';
 
-import { surClicSimple } from '../commun/lien';
+import { surClicSimple } from '../composants/lien';
 import { libelleCompteurs, type Resultats, type ResultatSeance } from '../domaine/resultats';
 import { formaterHeure } from '../domaine/temps';
 import type { CriteresSortie } from '../domaine/types';
 import { ID_SELECTION } from '../parcours/chemins';
-import { CarteSeance } from '../resultats/CarteSeance';
+import { CarteSeance } from '../composants/CarteSeance';
 
 interface Props {
   readonly selection: readonly ResultatSeance[];

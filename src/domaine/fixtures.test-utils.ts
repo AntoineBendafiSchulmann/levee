@@ -1,7 +1,7 @@
 import { DEMO_CRITERES_INITIAUX } from '../donnees-demo/criteres.demo';
 import { DEMO_SPECTACLES } from '../donnees-demo/spectacles.demo';
-import { construireResultats, type ResultatSeance } from '../domaine/resultats';
-import type { CriteresSortie, Duree, Salle, Spectacle } from '../domaine/types';
+import { construireResultats, type ResultatSeance } from './resultats';
+import type { CriteresSortie, Duree, Salle, Spectacle } from './types';
 
 const trouve = DEMO_SPECTACLES.find((s) => s.id === 'jeu-amour-hasard');
 if (trouve === undefined) {

@@ -14,16 +14,22 @@ Navigateur ──► http://localhost:5173  (Vite)
 ```
 server/Levee.Api/               API ASP.NET Core (BFF) appelée par le client
 src/                            Client React + Vite (index.html, package.json et configurations à la racine)
-  accueil/                      Accueil : pièce à l'affiche et ses voisines, séances sous l'affiche, sélection de séances, actions
-  criteres/                     Formulaire de critères et feuille qui le contient
-  resultats/                    Page des résultats, carte d'une séance (lien vers sa fiche), frise horaire
-  fiche/                        Fiche d'une pièce : séances par jour, verdict, détail du trajet et du calcul
-  parcours/                     Navigation (adresses, écran, critères, défilement, focus de retour)
-  commun/                       Éléments partagés (en-tête et navigation)
-  domaine/                      Types et fonctions pures : évaluation d'une séance, résultats, temps (+ tests)
+  composants/                   Composants partagés entre plusieurs fonctionnalités : en-tête et navigation (EnTete),
+                                affiche (Affiche), carte de séance (CarteSeance) et sa frise (FriseHoraire), libellés
+                                et couleurs de statut (statut.ts), gestion du clic sur un lien (lien.ts)
+  accueil/                      Page d'accueil et ses composants propres : pièce à l'affiche et ses voisines
+                                (CarrouselAffiches, useCarrousel, useMediaQuery), séances sous l'affiche, sélection de séances
+  resultats/                    Page des résultats (liste complète, filtres, compteurs)
+  fiche/                        Page d'une pièce et ses composants propres : séances par jour, verdict, trajet et calcul
+  criteres/                     Critères de la sortie : formulaire et feuille qui le contient
+  parcours/                     Navigation : adresses, écran, critères conservés, défilement, focus de retour
+  domaine/                      Types et fonctions pures (évaluation, résultats, temps, textes d'explication) et leurs tests
   donnees-demo/                 DONNÉES FICTIVES de démonstration, importées par App.tsx seul
   technique/                    Contrôle technique de l'API, servi sur /technique
 ```
+
+Une page et les composants qu'elle seule utilise restent dans le dossier de sa fonctionnalité ; un composant
+utilisé par plusieurs fonctionnalités va dans `composants/`.
 
 ## Prérequis
 

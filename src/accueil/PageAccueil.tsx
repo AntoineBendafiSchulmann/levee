@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 
-import { EnTete } from '../commun/EnTete';
+import { EnTete } from '../composants/EnTete';
 import { FeuilleCriteres } from '../criteres/FeuilleCriteres';
 import { FormulaireCriteres, type OptionsCriteres } from '../criteres/FormulaireCriteres';
 import { libelleBoutonVoir, libelleCompteurs, type Resultats } from '../domaine/resultats';
@@ -13,7 +13,7 @@ import { CarrouselAffiches } from './CarrouselAffiches';
 import { construireDiapos } from './diapos';
 import { selectionSoiree } from './selection';
 import { SelectionSeances } from './SelectionSeances';
-import { useMouvementReduit } from './useCarrousel';
+import { useMouvementReduit } from './useMediaQuery';
 
 interface Props {
   readonly parcours: Parcours;

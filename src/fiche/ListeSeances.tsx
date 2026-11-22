@@ -1,7 +1,7 @@
 import type { Evaluation } from '../domaine/evaluation';
 import { formaterHeure, formaterPlageHeures, libelleJourCourt } from '../domaine/temps';
 import type { JourIso, Seance } from '../domaine/types';
-import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../resultats/statut';
+import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../composants/statut';
 
 export interface LigneSeance {
   readonly identifiant: string;

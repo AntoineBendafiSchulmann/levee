@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 
-import { EnTete } from '../commun/EnTete';
+import { EnTete } from '../composants/EnTete';
 import { FeuilleCriteres } from '../criteres/FeuilleCriteres';
 import { FormulaireCriteres, type OptionsCriteres } from '../criteres/FormulaireCriteres';
 import { ReglageHeure } from '../criteres/ReglageHeure';
@@ -11,8 +11,8 @@ import { formaterHeure, libelleJourCourt, libelleJourLong } from '../domaine/tem
 import { pluriel } from '../domaine/texte';
 import { focaliserCle, ramenerEnVue } from '../parcours/focus';
 import type { Parcours } from '../parcours/useParcours';
-import { CarteSeance } from './CarteSeance';
-import { MOTIF_INCERTAIN, MOTIF_TRAJET } from './FriseHoraire';
+import { CarteSeance } from '../composants/CarteSeance';
+import { MOTIF_INCERTAIN, MOTIF_TRAJET } from '../composants/FriseHoraire';
 
 interface Props {
   readonly parcours: Parcours;

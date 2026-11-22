@@ -1,6 +1,6 @@
-import type { ResultatSeance } from '../domaine/resultats';
-import { dureesDistinctes, formaterDuree, formaterHeure, libelleMinutes } from '../domaine/temps';
-import type { CriteresSortie } from '../domaine/types';
+import type { ResultatSeance } from './resultats';
+import { dureesDistinctes, formaterDuree, formaterHeure, libelleMinutes } from './temps';
+import type { CriteresSortie } from './types';
 
 /** « a », « a et b », « a, b et c ». */
 function enumerer(elements: readonly string[]): string {

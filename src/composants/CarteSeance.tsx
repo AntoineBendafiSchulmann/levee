@@ -1,12 +1,12 @@
-import { Affiche } from '../accueil/Affiche';
-import { surClicSimple } from '../commun/lien';
+import { Affiche } from './Affiche';
+import { surClicSimple } from './lien';
 import { libelleGenre } from '../domaine/genres';
 import type { ResultatSeance } from '../domaine/resultats';
 import { identifiantSeance } from '../domaine/seance';
 import { dureesDistinctes, formaterDuree, formaterHeure, formaterPlageHeures, libelleMinutes } from '../domaine/temps';
 import type { CriteresSortie } from '../domaine/types';
 import { cheminCible } from '../parcours/chemins';
-import { explicationSeance } from './explication';
+import { explicationSeance } from '../domaine/explication';
 import { FriseHoraire } from './FriseHoraire';
 import { LIBELLE_STATUT, POINT_GROUPE as POINT, TEXTE_GROUPE as TEXTE } from './statut';
 

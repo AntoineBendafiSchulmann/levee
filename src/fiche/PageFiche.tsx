@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { Affiche } from '../accueil/Affiche';
-import { EnTete } from '../commun/EnTete';
+import { Affiche } from '../composants/Affiche';
+import { EnTete } from '../composants/EnTete';
 import type { OptionsCriteres } from '../criteres/FormulaireCriteres';
 import { libelleGenre } from '../domaine/genres';
 import { joursDisponibles } from '../domaine/programme';
@@ -10,8 +10,8 @@ import { identifiantSeance, resoudreFiche } from '../domaine/seance';
 import { formaterDuree, formaterHeure, libelleJourBref, libelleJourLong } from '../domaine/temps';
 import type { CriteresSortie, JourIso, Salle, Spectacle } from '../domaine/types';
 import type { Parcours } from '../parcours/useParcours';
-import { verdictSeance } from '../resultats/explication';
-import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../resultats/statut';
+import { verdictSeance } from '../domaine/explication';
+import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../composants/statut';
 import { CalculHoraire } from './CalculHoraire';
 import { ListeSeances } from './ListeSeances';
 

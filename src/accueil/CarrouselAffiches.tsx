@@ -1,11 +1,12 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useRef, type MouseEvent, type ReactNode } from 'react';
 
-import { surClicSimple } from '../commun/lien';
+import { surClicSimple } from '../composants/lien';
 import { cheminCible } from '../parcours/chemins';
-import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../resultats/statut';
-import { Affiche } from './Affiche';
+import { LIBELLE_STATUT, POINT_GROUPE, TEXTE_GROUPE } from '../composants/statut';
+import { Affiche } from '../composants/Affiche';
 import type { DiapoAffiche } from './diapos';
-import { indiceDepuisDefilement, useBureau, useCarrousel, voisins } from './useCarrousel';
+import { indiceDepuisDefilement, useCarrousel, voisins } from './useCarrousel';
+import { useBureau } from './useMediaQuery';
 
 interface Props {
   readonly diapos: readonly DiapoAffiche[];

@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
 import { CarteSeance } from './CarteSeance';
-import { DEUX_DUREES, resultatPour, type Cas } from './fixtures.test-utils';
+import { DEUX_DUREES, resultatPour, type Cas } from '../domaine/fixtures.test-utils';
 
 /** Le texte tel qu'il est rendu dans la carte (rendu serveur, sans navigateur). */
 function carte(cas: Cas): string {
